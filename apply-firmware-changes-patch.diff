@@ -1,0 +1,1593 @@
+From 15d4485cb1041c58c1204186e50e826032b6b6d6 Mon Sep 17 00:00:00 2001
+From: Albert Boehmler <ajboehmler@gmail.com>
+Date: Wed, 13 Dec 2023 17:29:22 -0500
+Subject: [PATCH] Apply firmware changes for lights
+
+---
+ firmware/esp32/qroma-lights/platformio.ini    |  25 +-
+ .../boards/qroma-boards-esp32dev.cpp          |  29 ++
+ .../qroma-lights/boards/qroma-boards-qtpy.cpp |  43 ++
+ .../boards/qroma-boards-tinypico.cpp          |  36 ++
+ .../src/qroma-lights/boards/qroma-boards.h    |  12 +
+ .../src/qroma-lights/qroma-commands.cpp       |  16 +
+ .../src/qroma-lights/qroma-commands.h         |   2 +
+ .../src/qroma-lights/qroma-lights-config.cpp  | 128 +++++
+ .../src/qroma-lights/qroma-lights-config.h    |  18 +
+ .../src/qroma-lights/qroma-lights-handler.cpp |  35 ++
+ .../src/qroma-lights/qroma-lights-handler.h   |  11 +
+ .../src/qroma-lights/qroma-project.cpp        |  84 ++--
+ .../src/qroma-lights/qroma-strip-handler.cpp  |  74 +++
+ .../src/qroma-lights/qroma-strip-handler.h    |  17 +
+ .../ws2812fx/QromaStripDriverWs2812Fx.cpp     | 463 ++++++++++++++++++
+ .../ws2812fx/QromaStripDriverWs2812Fx.h       |  66 +++
+ .../ws2812fx/qroma_init_settings.h            |  26 +
+ .../qroma-lights/ws2812fx/ws2812fx_utils.cpp  | 246 ++++++++++
+ .../qroma-lights/ws2812fx/ws2812fx_utils.h    |  22 +
+ 19 files changed, 1318 insertions(+), 35 deletions(-)
+ create mode 100644 firmware/esp32/qroma-lights/src/qroma-lights/boards/qroma-boards-esp32dev.cpp
+ create mode 100644 firmware/esp32/qroma-lights/src/qroma-lights/boards/qroma-boards-qtpy.cpp
+ create mode 100644 firmware/esp32/qroma-lights/src/qroma-lights/boards/qroma-boards-tinypico.cpp
+ create mode 100644 firmware/esp32/qroma-lights/src/qroma-lights/boards/qroma-boards.h
+ create mode 100644 firmware/esp32/qroma-lights/src/qroma-lights/qroma-lights-config.cpp
+ create mode 100644 firmware/esp32/qroma-lights/src/qroma-lights/qroma-lights-config.h
+ create mode 100644 firmware/esp32/qroma-lights/src/qroma-lights/qroma-lights-handler.cpp
+ create mode 100644 firmware/esp32/qroma-lights/src/qroma-lights/qroma-lights-handler.h
+ create mode 100644 firmware/esp32/qroma-lights/src/qroma-lights/qroma-strip-handler.cpp
+ create mode 100644 firmware/esp32/qroma-lights/src/qroma-lights/qroma-strip-handler.h
+ create mode 100644 firmware/esp32/qroma-lights/src/qroma-lights/ws2812fx/QromaStripDriverWs2812Fx.cpp
+ create mode 100644 firmware/esp32/qroma-lights/src/qroma-lights/ws2812fx/QromaStripDriverWs2812Fx.h
+ create mode 100644 firmware/esp32/qroma-lights/src/qroma-lights/ws2812fx/qroma_init_settings.h
+ create mode 100644 firmware/esp32/qroma-lights/src/qroma-lights/ws2812fx/ws2812fx_utils.cpp
+ create mode 100644 firmware/esp32/qroma-lights/src/qroma-lights/ws2812fx/ws2812fx_utils.h
+
+diff --git a/firmware/esp32/qroma-lights/platformio.ini b/firmware/esp32/qroma-lights/platformio.ini
+index 05a403f..8fd08f8 100644
+--- a/firmware/esp32/qroma-lights/platformio.ini
++++ b/firmware/esp32/qroma-lights/platformio.ini
+@@ -10,13 +10,32 @@
+ 
+ [env:esp32dev]
+ platform = espressif32
+-board = tinypico
++board = esp32dev
+ framework = arduino
+ lib_deps = https://github.com/qromatech/lib-esp32-qroma.git
++  kitesurfer1404/WS2812FX@^1.3.5
++monitor_speed = 115200
++lib_ldf_mode = deep+
++nanopb_require_protoc = false
++force_verbose = yes
++build_flags =
++  -DQROMA_BOARD_DEF_ESP32_DEV
++
++
++[env:tinypico]
++platform = espressif32
++board = tinypico
++framework = arduino
++lib_deps = 
++  https://github.com/qromatech/lib-esp32-qroma.git
++  kitesurfer1404/WS2812FX@^1.3.5
++  tinypico/TinyPICO Helper Library@^1.4.0
+ monitor_speed = 115200
+ lib_ldf_mode = deep+
+ nanopb_require_protoc = false
+ force_verbose = yes
++build_flags =
++  -DQROMA_BOARD_DEF_TINYPICO_ESP32
+ 
+ 
+ [env:adafruit_qtpy_esp32c3]
+@@ -26,9 +45,11 @@ framework = arduino
+ lib_deps = 
+   https://github.com/qromatech/lib-esp32-qroma.git
+   adafruit/Adafruit NeoPixel@^1.11.0
++  kitesurfer1404/WS2812FX@^1.3.5
+ monitor_speed = 115200
+ lib_ldf_mode = deep+
+ nanopb_require_protoc = false
+ force_verbose = yes
+ build_flags=
+-  -DQROMA_SERIAL="HWCDC"
+\ No newline at end of file
++  -DQROMA_SERIAL="HWCDC"
++  -DQROMA_BOARD_DEF_QTPY_ESP32_C3
+\ No newline at end of file
+diff --git a/firmware/esp32/qroma-lights/src/qroma-lights/boards/qroma-boards-esp32dev.cpp b/firmware/esp32/qroma-lights/src/qroma-lights/boards/qroma-boards-esp32dev.cpp
+new file mode 100644
+index 0000000..8fa5c14
+--- /dev/null
++++ b/firmware/esp32/qroma-lights/src/qroma-lights/boards/qroma-boards-esp32dev.cpp
+@@ -0,0 +1,29 @@
++#ifdef QROMA_BOARD_DEF_ESP32_DEV
++
++#ifndef QBD_ESP32_DEV
++#define QBD_ESP32_DEV
++
++#include "qroma-boards.h"
++#include "../ws2812fx/qroma_init_settings.h"
++
++void onInit() { }
++
++void setOnboardLightColor(int r, int g, int b) { }
++
++
++void populateWithBoardSpecificDefaultQromaLightsConfig(QromaLightsConfig * config)
++{
++  config->qromaStrip1Config.ioSettings.ledCount = QS_1_LED_COUNT;
++  config->qromaStrip1Config.ioSettings.pin = 14;
++  config->qromaStrip1Config.ioSettings.neoPixelRgbOrder = QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_GRB;
++  config->qromaStrip1Config.ioSettings.neoPixelTxRate = QromaStrip_WS2812FX_NeoPixelTxRate_QSNPTR_800_KHZ;
++
++  config->qromaStrip2Config.ioSettings.ledCount = QS_1_LED_COUNT;
++  config->qromaStrip2Config.ioSettings.pin = 15;
++  config->qromaStrip2Config.ioSettings.neoPixelRgbOrder = QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_GRB;
++  config->qromaStrip2Config.ioSettings.neoPixelTxRate = QromaStrip_WS2812FX_NeoPixelTxRate_QSNPTR_800_KHZ;
++}
++
++#endif
++
++#endif
+\ No newline at end of file
+diff --git a/firmware/esp32/qroma-lights/src/qroma-lights/boards/qroma-boards-qtpy.cpp b/firmware/esp32/qroma-lights/src/qroma-lights/boards/qroma-boards-qtpy.cpp
+new file mode 100644
+index 0000000..4a5ecad
+--- /dev/null
++++ b/firmware/esp32/qroma-lights/src/qroma-lights/boards/qroma-boards-qtpy.cpp
+@@ -0,0 +1,43 @@
++#ifdef QROMA_BOARD_DEF_QTPY_ESP32_C3
++
++#ifndef QBD_QTPY_ESP32
++#define QBD_QTPY_ESP32
++
++#include <Adafruit_NeoPixel.h>
++#include "qroma-boards.h"
++#include "../ws2812fx/qroma_init_settings.h"
++
++
++#define NUMPIXELS        1
++
++Adafruit_NeoPixel pixels(NUMPIXELS, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
++
++void onInit() {
++  pixels.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
++  pixels.setBrightness(20); // not so bright
++}
++
++void setOnboardLightColor(int r, int g, int b) {
++  uint32_t color = (r << 16) + (g << 8) + b;
++
++  pixels.fill(color);
++  pixels.show();
++}
++
++void populateWithBoardSpecificDefaultQromaLightsConfig(QromaLightsConfig * config)
++{
++  config->qromaStrip1Config.ioSettings.ledCount = QS_1_LED_COUNT;
++  config->qromaStrip1Config.ioSettings.pin = 14;
++  config->qromaStrip1Config.ioSettings.neoPixelRgbOrder = QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_GRB;
++  config->qromaStrip1Config.ioSettings.neoPixelTxRate = QromaStrip_WS2812FX_NeoPixelTxRate_QSNPTR_800_KHZ;
++
++  config->qromaStrip2Config.ioSettings.ledCount = QS_1_LED_COUNT;
++  config->qromaStrip2Config.ioSettings.pin = 15;
++  config->qromaStrip2Config.ioSettings.neoPixelRgbOrder = QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_GRB;
++  config->qromaStrip2Config.ioSettings.neoPixelTxRate = QromaStrip_WS2812FX_NeoPixelTxRate_QSNPTR_800_KHZ;
++}
++
++
++#endif
++
++#endif
+diff --git a/firmware/esp32/qroma-lights/src/qroma-lights/boards/qroma-boards-tinypico.cpp b/firmware/esp32/qroma-lights/src/qroma-lights/boards/qroma-boards-tinypico.cpp
+new file mode 100644
+index 0000000..fc71b17
+--- /dev/null
++++ b/firmware/esp32/qroma-lights/src/qroma-lights/boards/qroma-boards-tinypico.cpp
+@@ -0,0 +1,36 @@
++#ifdef QROMA_BOARD_DEF_TINYPICO_ESP32
++
++#ifndef QBD_TINYPICO_ESP32
++#define QBD_TINYPICO_ESP32
++
++#include <TinyPICO.h>
++#include "qroma-boards.h"
++#include "../ws2812fx/qroma_init_settings.h"
++
++// Initialise the TinyPICO library
++TinyPICO tp = TinyPICO();
++
++void onInit() { }
++
++void setOnboardLightColor(int r, int g, int b) {
++  tp.DotStar_SetPixelColor(r, g, b);
++}
++
++
++void populateWithBoardSpecificDefaultQromaLightsConfig(QromaLightsConfig * config)
++{
++  config->qromaStrip1Config.ioSettings.ledCount = QS_1_LED_COUNT;
++  config->qromaStrip1Config.ioSettings.pin = 14;
++  config->qromaStrip1Config.ioSettings.neoPixelRgbOrder = QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_GRB;
++  config->qromaStrip1Config.ioSettings.neoPixelTxRate = QromaStrip_WS2812FX_NeoPixelTxRate_QSNPTR_800_KHZ;
++
++  config->qromaStrip2Config.ioSettings.ledCount = QS_1_LED_COUNT;
++  config->qromaStrip2Config.ioSettings.pin = 15;
++  config->qromaStrip2Config.ioSettings.neoPixelRgbOrder = QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_GRB;
++  config->qromaStrip2Config.ioSettings.neoPixelTxRate = QromaStrip_WS2812FX_NeoPixelTxRate_QSNPTR_800_KHZ;
++}
++
++
++#endif
++
++#endif
+\ No newline at end of file
+diff --git a/firmware/esp32/qroma-lights/src/qroma-lights/boards/qroma-boards.h b/firmware/esp32/qroma-lights/src/qroma-lights/boards/qroma-boards.h
+new file mode 100644
+index 0000000..26d85be
+--- /dev/null
++++ b/firmware/esp32/qroma-lights/src/qroma-lights/boards/qroma-boards.h
+@@ -0,0 +1,12 @@
++#ifndef QROMA_BOARD_H
++#define QROMA_BOARD_H
++
++#include <qroma-proto/qroma-lights-types.pb.h>
++
++extern void onInit();
++extern void setOnboardLightColor(int r, int g, int b);
++
++extern void populateWithBoardSpecificDefaultQromaLightsConfig(QromaLightsConfig * config);
++
++
++#endif
+\ No newline at end of file
+diff --git a/firmware/esp32/qroma-lights/src/qroma-lights/qroma-commands.cpp b/firmware/esp32/qroma-lights/src/qroma-lights/qroma-commands.cpp
+index 94623c0..f06907d 100644
+--- a/firmware/esp32/qroma-lights/src/qroma-lights/qroma-commands.cpp
++++ b/firmware/esp32/qroma-lights/src/qroma-lights/qroma-commands.cpp
+@@ -1,5 +1,7 @@
+ #include "qroma-commands.h"
+ #include "qroma/qroma.h"
++#include "qroma-lights-handler.h"
++#include "qroma-strip-handler.h"
+ 
+ 
+ SetUpdateConfiguration updateConfiguration = SetUpdateConfiguration_init_zero; 
+@@ -34,9 +36,23 @@ void onMyAppCommand(MyAppCommand * message, MyAppResponse * response) {
+       response->response.pingResponse = PingResponse_init_zero;
+       response->response.pingResponse.pingId = message->command.pingRequest.pingId;
+       response->response.pingResponse.uptime = millis();
++      break;
++    case MyAppCommand_qromaDeviceCommand_tag:
++      response->which_response = MyAppResponse_qromaDeviceResponse_tag;
++      handleQromaLightsCommand(&(message->command.qromaDeviceCommand), &(response->response.qromaDeviceResponse));
++      break;
++    case MyAppCommand_qromaStripCommand_tag:
++      response->which_response = MyAppResponse_qromaStripResponse_tag;
++      handleQromaStripCommand(&(message->command.qromaStripCommand), &(response->response.qromaStripResponse));
++      break;
+     default:
+       logError("Unrecognized MyAppCommand command");
+       logError(message->which_command);
+       break;
+   }
++}
++
++
++bool hasQromaStartupCommandsFile() {
++  return false;
+ }
+\ No newline at end of file
+diff --git a/firmware/esp32/qroma-lights/src/qroma-lights/qroma-commands.h b/firmware/esp32/qroma-lights/src/qroma-lights/qroma-commands.h
+index b6d27f8..54d1b4c 100644
+--- a/firmware/esp32/qroma-lights/src/qroma-lights/qroma-commands.h
++++ b/firmware/esp32/qroma-lights/src/qroma-lights/qroma-commands.h
+@@ -5,4 +5,6 @@
+ 
+ void onMyAppCommand(MyAppCommand * message, MyAppResponse * hqr);
+ 
++bool hasQromaStartupCommandsFile();
++
+ #endif
+\ No newline at end of file
+diff --git a/firmware/esp32/qroma-lights/src/qroma-lights/qroma-lights-config.cpp b/firmware/esp32/qroma-lights/src/qroma-lights/qroma-lights-config.cpp
+new file mode 100644
+index 0000000..493408b
+--- /dev/null
++++ b/firmware/esp32/qroma-lights/src/qroma-lights/qroma-lights-config.cpp
+@@ -0,0 +1,128 @@
++#include "qroma-lights-config.h"
++#include "boards/qroma-boards.h"
++#include "ws2812fx/ws2812fx_utils.h"
++#include <qroma/util/fs.h>
++#include "qroma-strip-handler.h"
++#include <qroma/qroma.h>
++
++
++const char * DEFAULT_NAME_FOR_QROMA_STRIP_1 = "Qroma Strip 1";
++const char * DEFAULT_NAME_FOR_QROMA_STRIP_2 = "Qroma Strip 2";
++
++const char * QROMA_CONFIG_FILE_NAME = "/config.qroma";
++
++
++
++void populateQromaLightsConfig(QromaLightsConfig * config) {
++  if (hasQromaLightsConfigFile()) {
++    if (populateQromaLightsConfigFromFile(config)) {
++      return;
++    }
++  }
++
++  populateWithDefaultQromaLightsConfig(config);
++}
++
++
++void populateWithDefaultQromaLightsConfig(QromaLightsConfig * config) {
++  strncpy(config->qromaStrip1Config.name, DEFAULT_NAME_FOR_QROMA_STRIP_1, sizeof(config->qromaStrip1Config.name));
++  strncpy(config->qromaStrip2Config.name, DEFAULT_NAME_FOR_QROMA_STRIP_2, sizeof(config->qromaStrip2Config.name));
++
++  populateWithBoardSpecificDefaultQromaLightsConfig(config);
++
++  doInitializeQromaStripDefaultSegmentsDefinition_Ws2812FX(&(config->qromaStrip1Config.segmentsDefinition));
++  doInitializeQromaStripDefaultSegmentsDefinition_Ws2812FX(&(config->qromaStrip2Config.segmentsDefinition));
++
++  doInitializeQromaStripDefaultStartupAnimations_Ws2812FX(&(config->qromaStrip1Config.startupAnimations), 
++    config->qromaStrip1Config.segmentsDefinition.maxNumSegments);
++  doInitializeQromaStripDefaultStartupAnimations_Ws2812FX(&(config->qromaStrip2Config.startupAnimations), 
++    config->qromaStrip2Config.segmentsDefinition.maxNumSegments);
++
++  config->has_qromaStrip1Config = true;
++  config->qromaStrip1Config.has_ioSettings = true;
++  config->qromaStrip1Config.has_segmentsDefinition = true;
++
++  config->has_qromaStrip2Config = true;
++  config->qromaStrip2Config.has_ioSettings = true;
++  config->qromaStrip2Config.has_segmentsDefinition = true;
++}
++
++
++bool saveQromaLightsConfig() {
++  logInfo("SAVING QROMA LIGHTS CONFIG");
++  QromaLightsConfig config;
++  
++  populateConfigFromQromaLights(&config);
++
++  bool saved = savePbToPersistence<QromaLightsConfig>(&config, QROMA_CONFIG_FILE_NAME, QromaLightsConfig_fields);
++
++  if (!saved) {
++    logError("ERROR SAVING QROMA LIGHTS CONFIG");
++    logError(QROMA_CONFIG_FILE_NAME);
++  }
++
++  logInfo("DONE SAVING QROMA LIGHTS CONFIG");
++
++  return saved;
++}
++
++
++// bool saveQromaLightsStartupAnimations() {
++//   logInfo("SAVING QROMA LIGHTS ANIMATIONS");
++//   QromaStripStartupAnimation config;
++  
++//   populateConfigFromQromaLights(&config);
++
++//   bool saved = savePbToPersistence<QromaLightsConfig>(&config, QROMA_CONFIG_FILE_NAME, QromaLightsConfig_fields);
++
++//   if (!saved) {
++//     logError("ERROR SAVING QROMA LIGHTS CONFIG");
++//     logError(QROMA_CONFIG_FILE_NAME);
++//   }
++
++//   logInfo("DONE SAVING QROMA LIGHTS CONFIG");
++
++//   return saved;
++// }
++
++
++bool hasQromaLightsConfigFile() {
++  return doesFileExist(QROMA_CONFIG_FILE_NAME);
++}
++
++
++bool populateQromaLightsConfigFromFile(QromaLightsConfig * config) {
++  bool success = loadPbFromPersistence(config, QROMA_CONFIG_FILE_NAME, QromaLightsConfig_fields);
++  if (!success) {
++    logError("ERROR LOADING QROMA LIGHTS CONFIG");
++    logError(QROMA_CONFIG_FILE_NAME);
++  }
++
++  return success;
++}
++
++
++void populateStripConfigFromLights(QromaStripConfig * stripConfig, QromaStripDriverWs2812Fx * lights) {
++  strncpy(stripConfig->name, lights->getName(), sizeof(stripConfig->name));
++
++  lights->populateQromaStripIoSettings(&(stripConfig->ioSettings));
++  stripConfig->has_ioSettings = true;
++
++  lights->populateQromaStripSegmentsDefinition(&(stripConfig->segmentsDefinition));
++  stripConfig->has_segmentsDefinition = true;
++
++  lights->populateQromaStripStartupAnimations(&(stripConfig->startupAnimations));
++  stripConfig->has_startupAnimations = true;
++}
++
++
++void populateConfigFromQromaLights(QromaLightsConfig * config) {
++  QromaStripDriverWs2812Fx * lights1 = getLightsForStripIndex(QromaStrip_WS2812FX_StripIndex_QSSI_STRIP_01);
++  QromaStripDriverWs2812Fx * lights2 = getLightsForStripIndex(QromaStrip_WS2812FX_StripIndex_QSSI_STRIP_02);
++
++  config->has_qromaStrip1Config = true;
++  populateStripConfigFromLights(&(config->qromaStrip1Config), lights1);
++
++  config->has_qromaStrip2Config = true;
++  populateStripConfigFromLights(&(config->qromaStrip2Config), lights2);
++}
+diff --git a/firmware/esp32/qroma-lights/src/qroma-lights/qroma-lights-config.h b/firmware/esp32/qroma-lights/src/qroma-lights/qroma-lights-config.h
+new file mode 100644
+index 0000000..cb7d18c
+--- /dev/null
++++ b/firmware/esp32/qroma-lights/src/qroma-lights/qroma-lights-config.h
+@@ -0,0 +1,18 @@
++#ifndef QROMA_LIGHTS_CONFIG_H
++#define QROMA_LIGHTS_CONFIG_H
++
++#include <qroma-proto/qroma-lights-types.pb.h>
++
++
++void populateQromaLightsConfig(QromaLightsConfig * config);
++bool saveQromaLightsConfig();
++// bool saveQromaLightsAnimations();
++
++bool hasQromaLightsConfigFile();
++
++bool populateQromaLightsConfigFromFile(QromaLightsConfig * config);
++void populateWithDefaultQromaLightsConfig(QromaLightsConfig * config);
++
++void populateConfigFromQromaLights(QromaLightsConfig * config);
++
++#endif
+diff --git a/firmware/esp32/qroma-lights/src/qroma-lights/qroma-lights-handler.cpp b/firmware/esp32/qroma-lights/src/qroma-lights/qroma-lights-handler.cpp
+new file mode 100644
+index 0000000..b16dd3f
+--- /dev/null
++++ b/firmware/esp32/qroma-lights/src/qroma-lights/qroma-lights-handler.cpp
+@@ -0,0 +1,35 @@
++#include "qroma-lights-handler.h"
++#include "qroma-lights-config.h"
++#include <qroma/qroma.h>
++
++
++void handleQromaLightsNoArgCommand(NoArgCommands_QromaLightsCommand whichNoArgCommand, QromaLightsResponse * response) {
++  switch (whichNoArgCommand) {
++    case NoArgCommands_QromaLightsCommand_NacQlc_RequestQromaLightsConfig:
++      logInfo("HANDLING NoArgCommands_QromaLightsCommand_NacQlc_RequestQromaLightsConfig");
++      response->which_response = QromaLightsResponse_qromaLightsConfigResponse_tag;
++      populateConfigFromQromaLights(&(response->response.qromaLightsConfigResponse));
++      break;
++    case NoArgCommands_QromaLightsCommand_NacQlc_UseCurrentSetupOnStartup:
++      saveQromaLightsConfig();
++      break;
++    default:
++      logError("Unrecognized NoArgCommands_QromaDeviceCommand command");
++      logError(whichNoArgCommand);
++      break;      
++  }
++}
++
++
++void handleQromaLightsCommand(QromaLightsCommand * message, QromaLightsResponse * response) {
++
++  switch (message->which_command) {
++    case QromaLightsCommand_noArgCommand_tag:
++      handleQromaLightsNoArgCommand(message->command.noArgCommand, response);
++      break;
++    default:
++      logError("Unrecognized QromaLightsCommand command");
++      logError(message->which_command);
++      break;      
++  }
++}
+diff --git a/firmware/esp32/qroma-lights/src/qroma-lights/qroma-lights-handler.h b/firmware/esp32/qroma-lights/src/qroma-lights/qroma-lights-handler.h
+new file mode 100644
+index 0000000..475e2cd
+--- /dev/null
++++ b/firmware/esp32/qroma-lights/src/qroma-lights/qroma-lights-handler.h
+@@ -0,0 +1,11 @@
++#ifndef QROMA_DEVICE_HANDLER_H
++#define QROMA_DEVICE_HANDLER_H
++
++#include <qroma-proto/qroma-lights-command.pb.h>
++#include <qroma-proto/hello-qroma.pb.h>
++
++
++void handleQromaLightsCommand(QromaLightsCommand * message, QromaLightsResponse * response);
++
++
++#endif
+\ No newline at end of file
+diff --git a/firmware/esp32/qroma-lights/src/qroma-lights/qroma-project.cpp b/firmware/esp32/qroma-lights/src/qroma-lights/qroma-project.cpp
+index 5371982..6a693e8 100644
+--- a/firmware/esp32/qroma-lights/src/qroma-lights/qroma-project.cpp
++++ b/firmware/esp32/qroma-lights/src/qroma-lights/qroma-project.cpp
+@@ -1,6 +1,11 @@
+ #include "qroma-project.h"
+ #include "qroma-commands.h"
+ #include "qroma/qroma.h"
++#include "boards/qroma-boards.h"
++#include "qroma-lights-config.h"
++#include "qroma-strip-handler.h"
++
++#include <WS2812FX.h>
+ 
+ 
+ AppCommandProcessor<
+@@ -27,60 +32,73 @@ void qromaProjectSetup()
+     config->loggerConfig.logLevel = Qroma_LogLevel_LogLevel_Info;
+   });
+ 
+-  updateConfiguration.updateIntervalInMs = 1000;
++  updateConfiguration.updateIntervalInMs = 10;
+   // updateConfiguration.updateType = UpdateType_UpdateType_ProgressIndicator;
+-//  updateConfiguration.updateType = UpdateType_UpdateType_Interval;
+   updateConfiguration.updateType = UpdateType_UpdateType_None;
+ 
+   myQromaApp.startupQroma();
++
++  // load qroma config or use defaults if not initialized
++  QromaLightsConfig qromaLightsConfig;
++
++  populateQromaLightsConfig(&qromaLightsConfig);
++
++  initQromaLightsFromConfig(&qromaLightsConfig);
+ }
+ 
+ 
+ 
+-int updateCounter = 0;
+ 
++// void sendUptimeUpdateResponse() {
++//   MyAppResponse myAppResponse = MyAppResponse_init_zero;
++//   myAppResponse.which_response = MyAppResponse_update_tag;
++//   myAppResponse.response.update.which_update = UpdateResponse_uptimeUpdateResponse_tag;
++//   myAppResponse.response.update.update.uptimeUpdateResponse.uptime = millis();
+ 
+-void sendUptimeUpdateResponse() {
+-  MyAppResponse myAppResponse = MyAppResponse_init_zero;
+-  myAppResponse.which_response = MyAppResponse_update_tag;
+-  myAppResponse.response.update.which_update = UpdateResponse_uptimeUpdateResponse_tag;
+-  myAppResponse.response.update.update.uptimeUpdateResponse.uptime = millis();
++//   myQromaApp.sendQromaAppResponse<MyAppResponse, MyAppResponse_fields>(&myAppResponse);
+ 
+-  myQromaApp.sendQromaAppResponse<MyAppResponse, MyAppResponse_fields>(&myAppResponse);
++//   logInfo("sendUptimeUpdateResponse() complete");
++// }
+ 
+-  logInfo("Update from qroma-lights");
+-}
++// void sendProgressUpdateResponse() {
++//   MyAppResponse myAppResponse = MyAppResponse_init_zero;
++//   myAppResponse.which_response = MyAppResponse_update_tag;
++//   myAppResponse.response.update.which_update = UpdateResponse_progressIndicatorUpdateResponse_tag;
+ 
+-void sendProgressUpdateResponse() {
+-  MyAppResponse myAppResponse = MyAppResponse_init_zero;
+-  myAppResponse.which_response = MyAppResponse_update_tag;
+-  myAppResponse.response.update.which_update = UpdateResponse_progressIndicatorUpdateResponse_tag;
++//   myAppResponse.response.update.update.progressIndicatorUpdateResponse.progressIndicator[0] = '.';
++//   int dotCount = updateCounter % 45;
++//   for (int i=1; i < dotCount; i++) {
++//     myAppResponse.response.update.update.progressIndicatorUpdateResponse.progressIndicator[i] = '.';
++//   }
+ 
+-  myAppResponse.response.update.update.progressIndicatorUpdateResponse.progressIndicator[0] = '.';
+-  int dotCount = updateCounter % 45;
+-  for (int i=1; i < dotCount; i++) {
+-    myAppResponse.response.update.update.progressIndicatorUpdateResponse.progressIndicator[i] = '.';
+-  }
++//   myQromaApp.sendQromaAppResponse<MyAppResponse, MyAppResponse_fields>(&myAppResponse);
+ 
+-  myQromaApp.sendQromaAppResponse<MyAppResponse, MyAppResponse_fields>(&myAppResponse);
++//   onInit();
++//   setOnboardLightColor(0, 100, 0);
+ 
+-  logInfo("sendProgressUpdateResponse() complete");
+-}
++//   logInfo("sendProgressUpdateResponse() complete");
++// }
++
++int updateCounter = 0;
+ 
+ 
+ void qromaProjectLoop()
+ {
+   delay(updateConfiguration.updateIntervalInMs);
++  tickQromaLights();
++
+   updateCounter++;
+ 
+-  switch (updateConfiguration.updateType) {
+-    case UpdateType_UpdateType_Interval:
+-      sendUptimeUpdateResponse();
+-      break;
+-    case UpdateType_UpdateType_ProgressIndicator:
+-      sendProgressUpdateResponse();
+-      break;
+-    default:
+-      break;
+-  }
++  myQromaApp.processHeartbeat();
++
++  // switch (updateConfiguration.updateType) {
++  //   case UpdateType_UpdateType_Interval:
++  //     sendUptimeUpdateResponse();
++  //     break;
++  //   case UpdateType_UpdateType_ProgressIndicator:
++  //     sendProgressUpdateResponse();
++  //     break;
++  //   default:
++  //     break;
++  // }
+ }
+\ No newline at end of file
+diff --git a/firmware/esp32/qroma-lights/src/qroma-lights/qroma-strip-handler.cpp b/firmware/esp32/qroma-lights/src/qroma-lights/qroma-strip-handler.cpp
+new file mode 100644
+index 0000000..5ebab21
+--- /dev/null
++++ b/firmware/esp32/qroma-lights/src/qroma-lights/qroma-strip-handler.cpp
+@@ -0,0 +1,74 @@
++#include "qroma-strip-handler.h"
++#include "qroma/qroma.h"
++#include "ws2812fx/QromaStripDriverWs2812Fx.h"
++#include "qroma-lights-config.h"
++
++
++QromaStripDriverWs2812Fx _qromaLights1;
++QromaStripDriverWs2812Fx _qromaLights2;
++
++
++void initQromaLightsFromConfig(QromaLightsConfig * config) {
++  _qromaLights1.startup(&(config->qromaStrip1Config));
++  _qromaLights2.startup(&(config->qromaStrip2Config));
++}
++
++
++void tickQromaLights() {
++  _qromaLights1.tick();
++  _qromaLights2.tick();
++}
++
++
++QromaStripDriverWs2812Fx * getLightsForStripIndex(QromaStrip_WS2812FX_StripIndex stripIndex) {
++  switch (stripIndex) {
++    case QromaStrip_WS2812FX_StripIndex_QSSI_STRIP_01:
++      return &_qromaLights1;
++    case QromaStrip_WS2812FX_StripIndex_QSSI_STRIP_02:
++      return &_qromaLights2;
++    default:
++      logInfo("UNRECOGNIZED STRIP INDEX");
++      logInfo(stripIndex);
++  }
++
++  return NULL;
++}
++
++
++void handleQromaStripCommand(QromaStripCommand * message, QromaStripResponse * response) {
++  QromaStripDriverWs2812Fx * lights = NULL;
++
++  switch (message->which_command) {
++    case QromaStripCommand_setQromaStripBrightness_tag:
++      logInfo("HANDLING setQromaStripBrightness_tag");
++      lights = getLightsForStripIndex(message->command.setQromaStripBrightness.stripIndex);
++      lights->updateQromaStripBrightness(&(message->command.setQromaStripBrightness));
++      break;
++    case QromaStripCommand_setQromaStripSegmentAnimation_tag:
++      logInfo("HANDLING setQromaStripSegmentAnimation_tag");
++      lights = getLightsForStripIndex(message->command.setQromaStripSegmentAnimation.stripIndex);
++      lights->updateQromaStripAnimation(&(message->command.setQromaStripSegmentAnimation));
++      break;
++    case QromaStripCommand_setQromaStripSegments_tag:
++      logInfo("HANDLING setQromaStripSegments_tag");
++      lights = getLightsForStripIndex(message->command.setQromaStripSegments.stripIndex);
++      lights->updateQromaStripSegments(&(message->command.setQromaStripSegments));
++      saveQromaLightsConfig();
++      break;
++    case QromaStripCommand_setQromaStripIoSettings_tag:
++      logInfo("HANDLING setQromaStripIoSettings_tag");
++      lights = getLightsForStripIndex(message->command.setQromaStripIoSettings.stripIndex);
++      lights->updateQromaStripIoSettings(&(message->command.setQromaStripIoSettings));
++      saveQromaLightsConfig();
++      break;
++    case QromaStripCommand_saveQromaStripCurrentState_tag:
++      logInfo("HANDLING saveQromaStripCurrentState_tag");
++      saveQromaLightsConfig();
++      // saveQromaLightsAnimations();
++      break;
++    default:
++      logError("Unrecognized WS2812Fx driver command");
++      logError(message->which_command);
++      break;
++  }
++}
+diff --git a/firmware/esp32/qroma-lights/src/qroma-lights/qroma-strip-handler.h b/firmware/esp32/qroma-lights/src/qroma-lights/qroma-strip-handler.h
+new file mode 100644
+index 0000000..0318fa9
+--- /dev/null
++++ b/firmware/esp32/qroma-lights/src/qroma-lights/qroma-strip-handler.h
+@@ -0,0 +1,17 @@
++#ifndef QROMA_LIGHTS_HANDLER_H
++#define QROMA_LIGHTS_HANDLER_H
++
++#include <qroma-proto/hello-qroma.pb.h>
++#include "ws2812fx/QromaStripDriverWs2812Fx.h"
++
++
++void initQromaLightsFromConfig(QromaLightsConfig * config);
++void tickQromaLights();
++
++QromaStripDriverWs2812Fx * getLightsForStripIndex(QromaStrip_WS2812FX_StripIndex stripIndex);
++
++void handleQromaStripCommand(QromaStripCommand * message, QromaStripResponse * response);
++
++
++
++#endif
+\ No newline at end of file
+diff --git a/firmware/esp32/qroma-lights/src/qroma-lights/ws2812fx/QromaStripDriverWs2812Fx.cpp b/firmware/esp32/qroma-lights/src/qroma-lights/ws2812fx/QromaStripDriverWs2812Fx.cpp
+new file mode 100644
+index 0000000..0d550cd
+--- /dev/null
++++ b/firmware/esp32/qroma-lights/src/qroma-lights/ws2812fx/QromaStripDriverWs2812Fx.cpp
+@@ -0,0 +1,463 @@
++#include "QromaStripDriverWs2812Fx.h"
++#include "ws2812fx_utils.h"
++#include <qroma/qroma.h>
++#include <qroma-proto/hello-qroma.pb.h>
++#include <qroma-proto/qroma-lights-types.pb.h>
++
++
++// QromaPointDriverWs2812Fx::QromaPointDriverWs2812Fx(QromaPointDetails * qpDetails) {
++//   strncpy( _manifest.pointName, qpDetails->pointName, sizeof( _manifest.pointName));
++//   strncpy( _manifest.instanceId, qpDetails->instanceId, sizeof( _manifest.instanceId));
++//   strncpy( _manifest.driverId, "qroma-ws2812fx", sizeof( _manifest.driverId));
++// }
++
++// QromaStripDriverWs2812Fx::QromaStripDriverWs2812Fx(QromaStripConfig * config) {
++
++// }
++
++
++void QromaStripDriverWs2812Fx::startup(QromaStripConfig * config) {
++  memcpy(&(_config), config, sizeof(QromaStripConfig));
++
++  QromaStrip_WS2812FX_IoSettings * qsio = &(_config.ioSettings);
++  // QromaStrip_WS2812FX_LedsConfig * stripConfig = &(_config.ledsConfig);
++  // QromaStrip_WS2812FX_LedsConfig * stripConfig = &(_config.ledsConfig);
++  QromaStrip_WS2812FX_SegmentsDefinition * segmentsDefinition = &(_config.segmentsDefinition);
++  QromaStrip_WS2812FX_StartupAnimations * startupAnimations = &(_config.startupAnimations);
++
++  logInfo("LED STARTUP SEGMENTS");
++  logInfo(segmentsDefinition->numSegments);
++  logInfo("MAX LED STARTUP SEGMENTS");
++  logInfo(segmentsDefinition->maxNumSegments);
++
++  neoPixelType npt = mapRgbOrderAndTxRateToNeoPixelType(qsio->neoPixelRgbOrder, qsio->neoPixelTxRate);
++
++  logInfo("INITIALIZING LED");
++  logInfo(qsio->ledCount);
++  logInfo(qsio->pin);
++  logInfo(npt);
++  _ws2812fx = new WS2812FX(qsio->ledCount, qsio->pin, npt, segmentsDefinition->maxNumSegments);
++  _ws2812fx->init();
++  _ws2812fx->setBrightness(segmentsDefinition->brightness);
++
++  uint32_t colors[COLOR_COUNT];
++
++  for (int i=0; i < segmentsDefinition->numSegments; i++) {
++    QromaStrip_WS2812FX_Segment * segment = &(segmentsDefinition->segments[i]);
++    
++    QromaStrip_WS2812FX_Animation * segmentAnimation = &(startupAnimations->segmentAnimations[i]);
++
++    colors[0] = convertQromaStripColorToUint(&(segmentAnimation->color1));
++    colors[1] = convertQromaStripColorToUint(&(segmentAnimation->color2));
++    colors[2] = convertQromaStripColorToUint(&(segmentAnimation->color3));
++
++    uint8_t options = calculateQromaStripAnimationOptions(segmentAnimation);
++
++    _ws2812fx->setSegment(
++      i, 
++      segment->startIndex,
++      segment->endIndex,
++      segmentAnimation->pattern, 
++      colors,
++      segmentAnimation->speed,
++      options
++      );
++  }
++
++  _ws2812fx->start();
++}
++
++
++// void QromaPointDriverWs2812Fx::startup() {
++
++//   QfsPath qfsPath;
++//   initQfsPath(&qfsPath);
++//   getLocationForQromaPointFile(_manifest.instanceId, STARTUP_FILE_NAME, &qfsPath);
++
++//   pb_byte_t qpConfigBytes[MAX_STARTUP_FILE_SIZE];
++//   memset(qpConfigBytes, 0, sizeof qpConfigBytes);
++
++//   int qpConfigBytesSize = loadDataFromPersistence(qfsPath.qfsPath, qpConfigBytes, sizeof(qpConfigBytes));
++
++//   logInfo("STARTING QROMA POINT QromaPointDriverWs2812Fx");
++//   logInfo(qpConfigBytesSize);
++
++//   pb_istream_t stream = pb_istream_from_buffer(qpConfigBytes, qpConfigBytesSize);
++//   bool decoded = pb_decode(&stream, WS2812FX_Config_fields, &_config);
++//   if (!decoded) {
++//     logError("UNABLE TO START QromaPointDriverWs2812Fx");
++//     logError(qpConfigBytesSize);
++//     return;
++//   }
++
++//   QromaPoint_WS2812FX_IoSettings * qsio = &(_config.ioSettings);
++//   QromaStrip_WS2812FX_LedsConfig * stripConfig = &(_config.leds);
++//   logInfo("LED STARTUP SEGMENTS");
++//   logInfo(stripConfig->numSegments);
++//   logInfo("MAX LED STARTUP SEGMENTS");
++//   logInfo(stripConfig->maxNumSegments);
++
++//   neoPixelType npt = mapRgbOrderAndTxRateToNeoPixelType(qsio->neoPixelRgbOrder, qsio->neoPixelTxRate);
++
++//   _ws2812fx = new WS2812FX(qsio->ledCount, qsio->pin, npt, stripConfig->maxNumSegments);
++//   _ws2812fx->init();
++
++//   uint32_t colors[COLOR_COUNT];
++
++//   for (int i=0; i < stripConfig->numSegments; i++) {
++//     QromaStrip_WS2812FX_Segment * cmdSegment = &(stripConfig->segments[i]);
++//     QromaStrip_WS2812FX_Animation * qsAnimation = &(stripConfig->segmentAnimations[i]);
++
++//     logInfo("SETTING SEGMENT ANIMATION");
++//     logInfo(i);
++//     logInfo(qsAnimation->pattern);
++    
++//     for (int i = 0; i < COLOR_COUNT; i++) {
++//       colors[i] = convertColorRgbBytesToUint(qsAnimation->threeSetsOfColorRgbBytes, i);
++//     }
++
++//     uint8_t options = calculateQromaStripAnimationOptions(qsAnimation);
++
++//     _ws2812fx->setSegment(
++//       i, 
++//       cmdSegment->startIndex,
++//       cmdSegment->endIndex,
++//       qsAnimation->pattern, 
++//       colors,
++//       qsAnimation->speed,
++//       options
++//       );
++//   }
++
++//   _ws2812fx->start();
++
++//   notifyQpManifest(&_manifest);
++//   notifyWs2812FxConfigChanged();
++// }
++
++
++void QromaStripDriverWs2812Fx::populateQromaStripIoSettings(QromaStrip_WS2812FX_IoSettings * settings) {
++  memcpy(settings, &(_config.ioSettings), sizeof(QromaStrip_WS2812FX_IoSettings));
++}
++
++
++// void QromaStripDriverWs2812Fx::populateQromaStripLedsConfig(QromaStrip_WS2812FX_LedsConfig * config) {
++//   memcpy(config, &(_config.ledsConfig), sizeof(QromaStrip_WS2812FX_LedsConfig));
++// }
++
++
++void QromaStripDriverWs2812Fx::populateQromaStripSegmentsDefinition(QromaStrip_WS2812FX_SegmentsDefinition * segmentsDefinition) {
++  memcpy(segmentsDefinition, &(_config.segmentsDefinition), sizeof(QromaStrip_WS2812FX_SegmentsDefinition));
++}
++
++
++void QromaStripDriverWs2812Fx::populateQromaStripStartupAnimations(QromaStrip_WS2812FX_StartupAnimations * startupAnimations) {
++  memcpy(startupAnimations, &(_config.startupAnimations), sizeof(QromaStrip_WS2812FX_StartupAnimations));
++}
++
++
++const char * QromaStripDriverWs2812Fx::getName() {
++  return _config.name;
++}
++
++
++void QromaStripDriverWs2812Fx::tick() {
++  // if (tickData->currentPowerMode != QromaPower_PowerMode_Qpm_WithBattery_LowBatteryVoltage_StopNormalOps) {
++    _ws2812fx->service();
++  // } else {
++  //   _ws2812fx->stop();
++  // }
++}
++
++
++void QromaStripDriverWs2812Fx::updateQromaStripBrightness(SetQromaStrip_WS2812FX_Brightness * cmd) {
++  _ws2812fx->setBrightness(cmd->brightness);
++  _config.segmentsDefinition.brightness = cmd->brightness;
++  logInfo("UPDATED BRIGHTNESS");
++  logInfo(cmd->brightness);
++  // _ws2812fx->trigger();
++  // _ws2812fx->service();
++
++  // _ws2812fx->stop();
++  // _ws2812fx->start();
++  
++  // notifyWs2812FxConfigChanged();
++}
++
++
++void QromaStripDriverWs2812Fx::copyQromaStripAnimation(QromaStrip_WS2812FX_Animation * dest, QromaStrip_WS2812FX_Animation * src) {
++  dest->pattern = src->pattern;
++  dest->fadeSpeed = src->fadeSpeed;
++  dest->reversed = src->reversed;
++  dest->size = src->size;
++  dest->speed = src->speed;
++  dest->useGammaCorrection = src->useGammaCorrection;
++  
++  memcpy(&(dest->color1), &(src->color1), sizeof(dest->color1));
++  memcpy(&(dest->color2), &(src->color2), sizeof(dest->color2));
++  memcpy(&(dest->color3), &(src->color3), sizeof(dest->color3));
++}
++
++
++void QromaStripDriverWs2812Fx::copyQromaStripSegment(QromaStrip_WS2812FX_Segment * dest, QromaStrip_WS2812FX_Segment * src) {
++  dest->startIndex = src->startIndex;
++  dest->endIndex = src->endIndex;
++}
++
++
++void QromaStripDriverWs2812Fx::updateQromaStripAnimation(SetQromaStrip_WS2812FX_SegmentAnimation * cmd) {
++  logInfo("updateQromaStripAnimation()");
++  logInfo(cmd->segmentIndex);
++  logInfo(cmd->animation.pattern);
++
++  applySegmentAnimation(cmd->segmentIndex, &(cmd->animation));
++
++  logInfo("COPYING - copyQromaStripAnimation");
++  // copyQromaStripAnimation(&(_config.ledsConfig.segmentAnimations[cmd->segmentIndex]), &(cmd->animation));
++
++  _ws2812fx->trigger();
++  // notifyWs2812FxConfigChanged();
++}
++
++
++void QromaStripDriverWs2812Fx::applySegmentAnimation(int segmentIndex, QromaStrip_WS2812FX_Animation * animation) {
++  logInfo("updateQromaStripAnimation()");
++  logInfo(segmentIndex);
++  logInfo(animation->pattern);
++
++  uint32_t colors[COLOR_COUNT];
++  // for (int i = 0; i < COLOR_COUNT; i++) {
++    // colors[i] = convertColorRgbBytesToUint(animation->threeSetsOfColorRgbBytes, i);
++  //   colors[i] = convertQromaStripColorToUint(&(animation->color));
++  // }
++  colors[0] = convertQromaStripColorToUint(&(animation->color1));
++  colors[1] = convertQromaStripColorToUint(&(animation->color2));
++  colors[2] = convertQromaStripColorToUint(&(animation->color3));
++
++
++  uint8_t options = calculateQromaStripAnimationOptions(animation);
++  
++  WS2812FX::Segment * segment = _ws2812fx->getSegment(segmentIndex);
++
++  segment->mode = animation->pattern;
++  segment->speed = animation->speed;
++  for (int i=0; i < COLOR_COUNT; i++) {
++    segment->colors[i] = colors[i];
++  }
++  segment->options = options;
++
++  logInfo("COPYING - copyQromaStripAnimation");
++  // copyQromaStripAnimation(&(_config.ledsConfig.segmentAnimations[segmentIndex]), animation);
++
++  // _ws2812fx->trigger();
++  // notifyWs2812FxConfigChanged();
++}
++
++
++void QromaStripDriverWs2812Fx::updateWs2812FxSegments(int numSegments, 
++  QromaStrip_WS2812FX_Segment * segments, QromaStrip_WS2812FX_Animation * animations) 
++{
++  for (int i=0; i < numSegments; i++) {
++    QromaStrip_WS2812FX_Segment * cmdSegment = &(segments[i]);
++    QromaStrip_WS2812FX_Animation * cmdSegmentAnimation = &(animations[i]);
++
++    uint32_t colors[COLOR_COUNT];
++    // for (int i = 0; i < COLOR_COUNT; i++) {
++      // colors[i] = convertColorRgbBytesToUint(cmdSegmentAnimation->threeSetsOfColorRgbBytes, i);
++      // colors[i] = convertQromaStripColorToUint(&(cmdSegmentAnimation->color));
++    // }
++    colors[0] = convertQromaStripColorToUint(&(cmdSegmentAnimation->color1));
++    colors[1] = convertQromaStripColorToUint(&(cmdSegmentAnimation->color2));
++    colors[2] = convertQromaStripColorToUint(&(cmdSegmentAnimation->color3));
++    
++    uint8_t options = calculateQromaStripAnimationOptions(cmdSegmentAnimation);
++
++    _ws2812fx->setSegment(
++      i, 
++      cmdSegment->startIndex, 
++      cmdSegment->endIndex,
++      cmdSegmentAnimation->pattern, 
++      colors,
++      cmdSegmentAnimation->speed,
++      options
++      );
++
++    copyQromaStripSegment(&(_config.segmentsDefinition.segments[i]), cmdSegment);
++    // copyQromaStripAnimation(&(_config.ledsConfig.segmentAnimations[i]), cmdSegmentAnimation);
++  }
++}
++
++
++void QromaStripDriverWs2812Fx::updateQromaStripSegments(SetQromaStrip_WS2812FX_Segments * cmd) {
++
++  if (_config.segmentsDefinition.numSegments != cmd->numSegments) {
++    logInfo("CHANGING NUMBER OF SEGMENTS (OLD/NEW)");
++    logInfo(_config.segmentsDefinition.numSegments);
++    logInfo(cmd->numSegments);
++    _config.segmentsDefinition.numSegments = cmd->numSegments;
++    
++    _ws2812fx->resetSegments();
++    _ws2812fx->setNumSegments(cmd->numSegments);
++  }
++
++  // updateWs2812FxSegments(cmd->numSegments, cmd->segments, cmd->animations);
++
++  _ws2812fx->trigger();
++}
++
++
++void QromaStripDriverWs2812Fx::resetSegmentsForNewLedCount(uint32_t newLedCount) {
++  logInfo("NEW LED COUNT. RESETTING SEGMENTS");
++  logInfo(newLedCount);
++  SetQromaStrip_WS2812FX_Segments segmentsCommand = SetQromaStrip_WS2812FX_Segments();
++
++  // we will reset everything based on the first segment
++  segmentsCommand.numSegments = 1;
++  segmentsCommand.segments[0].startIndex = 0;
++  segmentsCommand.segments[0].endIndex = newLedCount - 1;
++  // copyQromaStripAnimation(&(segmentsCommand.animations[0]), &(_config.ledsConfig.segmentAnimations[0]));
++
++  updateQromaStripSegments(&segmentsCommand);
++}
++
++
++void QromaStripDriverWs2812Fx::updateQromaStripIoSettings(SetQromaStrip_WS2812FX_IoSettings * cmd) {
++  if (cmd->settings.ledCount == _config.ioSettings.ledCount &&
++      cmd->settings.pin == _config.ioSettings.pin &&
++      cmd->settings.neoPixelRgbOrder == _config.ioSettings.neoPixelRgbOrder &&
++      cmd->settings.neoPixelTxRate == _config.ioSettings.neoPixelTxRate) 
++  {
++    logInfo("NO IO CHANGES");
++    return;
++  }
++
++  if (cmd->settings.ledCount != _config.ioSettings.ledCount) {
++    resetSegmentsForNewLedCount(cmd->settings.ledCount);
++  }
++
++  logInfo("UPDATE LED COUNT -> OLD/NEW");
++  logInfo(_config.ioSettings.ledCount);
++  logInfo(cmd->settings.ledCount);
++  _config.ioSettings.ledCount = cmd->settings.ledCount;
++
++  logInfo("UPDATE PIN NUMBER -> OLD/NEW");
++  logInfo(_config.ioSettings.pin);
++  logInfo(cmd->settings.pin);
++  _config.ioSettings.pin = cmd->settings.pin;
++  
++  logInfo("UPDATE PIXEL RGB ORDER -> OLD/NEW");
++  logInfo(_config.ioSettings.neoPixelRgbOrder);
++  logInfo(cmd->settings.neoPixelRgbOrder);
++  _config.ioSettings.neoPixelRgbOrder = cmd->settings.neoPixelRgbOrder;
++  
++  logInfo("UPDATE PIXEL TX RATE -> OLD/NEW");
++  logInfo(_config.ioSettings.neoPixelTxRate);
++  logInfo(cmd->settings.neoPixelTxRate);
++  _config.ioSettings.neoPixelTxRate = cmd->settings.neoPixelTxRate;
++
++  neoPixelType newType = mapRgbOrderAndTxRateToNeoPixelType(cmd->settings.neoPixelRgbOrder, cmd->settings.neoPixelTxRate);
++  _ws2812fx->updateType(newType);
++  
++  // QfsPath qfsPath;
++  // initQfsPath(&qfsPath);
++  // getLocationForQromaPointFile(_manifest.instanceId, STARTUP_FILE_NAME, &qfsPath);
++  // bool saved = savePbToPersistence<WS2812FX_Config>(&_config, qfsPath.qfsPath, WS2812FX_Config_fields);
++
++  bool saved = false;
++
++  if (!saved) {
++    logError("ERROR SAVING QROMA STRIP IO SETTINGS");
++    // logError(qfsPath.qfsPath);
++    return;
++  }
++
++  // notifyWs2812FxConfigChanged();
++}
++
++
++void QromaStripDriverWs2812Fx::saveQromaStripCurrentState(SaveQromaStrip_CurrentState * cmd) {
++  // QfsPath qfsPath;
++  // initQfsPath(&qfsPath);
++  // getLocationForQromaPointFile(_manifest.instanceId, STARTUP_FILE_NAME, &qfsPath);
++  // bool saved = savePbToPersistence<WS2812FX_Config>(&_config, qfsPath.qfsPath, WS2812FX_Config_fields);
++
++  bool saved = false;
++
++  if (!saved) {
++    logError("ERROR SAVING QROMA STRIP IO SETTINGS");
++    // logError(qfsPath.qfsPath);
++  }
++}
++
++
++// void _taskHandleWS2812FX_Command(void * pvParameters) {
++//   logInfo("HANDLING _taskHandleWS2812FX_Command");
++//   logInfo(millis());
++  
++//   QromaPointDriverWs2812Fx * qpd = (QromaPointDriverWs2812Fx*)pvParameters;
++
++//   qpd->processQpBtCommand();
++
++//   vTaskDelete(NULL);
++// }
++
++
++// // void QromaPointDriverWs2812Fx::onQpBtCommand(WS2812FX_Command * ws2812fxCommand) {
++// // logInfo("RECEIVED QromaPointDriverWs2812Fx::onQpBtCommand");
++// void QromaPointDriverWs2812Fx::onQpPbCommand(WS2812FX_Command * ws2812fxCommand) {
++//   logInfo("RECEIVED QromaPointDriverWs2812Fx::onQpPbCommand");
++//   logInfo(millis());
++
++//   memcpy(&_btCommand, ws2812fxCommand, sizeof(_btCommand));
++
++//   BaseType_t xTaskStatus = xTaskCreate(_taskHandleWS2812FX_Command, "_taskHandleWS2812FX_Command", 8000, (void*)this, 1, NULL);
++
++//   if (xTaskStatus != pdPASS) {
++//     logError("ERROR CREATING TASK: _taskHandleWS2812FX_Command");
++//     logError(xTaskStatus);
++//     return;
++//   }
++// }
++
++
++// void QromaPointDriverWs2812Fx::processQpBtCommand() {
++//   switch (_btCommand.which_command) {
++//     case WS2812FX_Command_setQromaStripBrightness_tag:
++//       logInfo("HANDLING WS2812FX_Command_setQromaStripBrightness_tag");
++//       updateQromaStripBrightness(&(_btCommand.command.setQromaStripBrightness));
++//       break;
++//     case WS2812FX_Command_setQromaStripSegmentAnimation_tag:
++//       logInfo("HANDLING WS2812FX_Command_setQromaStripSegmentAnimation_tag");
++//       updateQromaStripAnimation(&(_btCommand.command.setQromaStripSegmentAnimation));
++//       break;
++//     case WS2812FX_Command_setQromaStripSegments_tag:
++//       logInfo("HANDLING WS2812FX_Command_setQromaStripSegments_tag");
++//       updateQromaStripSegments(&(_btCommand.command.setQromaStripSegments));
++//       break;
++//     case WS2812FX_Command_setQromaStripIoSettings_tag:
++//       logInfo("HANDLING WS2812FX_Command_setQromaStripIoSettings_tag");
++//       updateQromaStripIoSettings(&(_btCommand.command.setQromaStripIoSettings));
++//       break;
++//     case WS2812FX_Command_saveQromaStripCurrentState_tag:
++//       logInfo("HANDLING WS2812FX_Command_saveQromaStripCurrentState_tag");
++//       saveQromaStripCurrentState(&(_btCommand.command.saveQromaStripCurrentState));
++//       break;
++//     default:
++//       logError("Unrecognized WS2812Fx driver command");
++//       logError(_btCommand.which_command);
++//       break;
++//   }
++
++//   logInfo("DONE processQpBtCommand");
++//   logInfo(millis());
++// }
++
++
++// void QromaPointDriverWs2812Fx::notifyWs2812FxConfigChanged() {
++//   logInfo("notifyWs2812FxConfigChanged()");
++//   notifyQpConfig(&_config);
++//   logInfo("notifyWs2812FxConfigChanged() - pre status");
++//   _status.lastConfigChangeTimeInMs = millis();
++//   notifyQpStatus(&_status);
++//   logInfo("notifyWs2812FxConfigChanged() - post status");
++// }
+diff --git a/firmware/esp32/qroma-lights/src/qroma-lights/ws2812fx/QromaStripDriverWs2812Fx.h b/firmware/esp32/qroma-lights/src/qroma-lights/ws2812fx/QromaStripDriverWs2812Fx.h
+new file mode 100644
+index 0000000..8432347
+--- /dev/null
++++ b/firmware/esp32/qroma-lights/src/qroma-lights/ws2812fx/QromaStripDriverWs2812Fx.h
+@@ -0,0 +1,66 @@
++#ifndef QROMA_POINT_WS2812FX_H_INCLUDED
++#define QROMA_POINT_WS2812FX_H_INCLUDED
++
++#include <WS2812FX.h>
++// #include <qroma-proto/driver-ws2812fx.pb.h>
++#include <qroma-proto/qroma-lights-command.pb.h>
++#include <qroma-proto/qroma-strip-command.pb.h>
++
++
++// class QromaPointDriverWs2812Fx: public QromaPointPbDriver<
++//   WS2812FX_Command, WS2812FX_Command_fields,
++//   WS2812FX_Status, WS2812FX_Status_fields,
++//   WS2812FX_Config, WS2812FX_Config_fields,
++//   QromaPointManifest, QromaPointManifest_fields
++// > {
++  
++//   public:
++//     QromaPointDriverWs2812Fx(QromaPointDetails * qpDetails);
++
++class QromaStripDriverWs2812Fx {
++    // void tick(TickData * tickData);
++    // void onQpPbCommand(WS2812FX_Command * btData);
++    // void processQpBtCommand();
++
++  public:
++    // QromaStripDriverWs2812Fx(QromaStripConfig * config);
++
++    void startup(QromaStripConfig * config);
++
++    void updateQromaStripBrightness(SetQromaStrip_WS2812FX_Brightness * cmd);
++    void updateQromaStripAnimation(SetQromaStrip_WS2812FX_SegmentAnimation * cmd);
++    void updateQromaStripSegments(SetQromaStrip_WS2812FX_Segments * cmd);
++    void updateQromaStripIoSettings(SetQromaStrip_WS2812FX_IoSettings * cmd);
++    void saveQromaStripCurrentState(SaveQromaStrip_CurrentState * cmd);
++
++    void tick();
++    void populateQromaStripIoSettings(QromaStrip_WS2812FX_IoSettings * settings);
++    // void populateQromaStripLedsConfig(QromaStrip_WS2812FX_LedsConfig * config);
++    void populateQromaStripSegmentsDefinition(QromaStrip_WS2812FX_SegmentsDefinition * segmentsDefinition);
++    void populateQromaStripStartupAnimations(QromaStrip_WS2812FX_StartupAnimations * startupAnimation);
++
++    const char * getName();
++
++  private:
++    WS2812FX * _ws2812fx;
++
++    // WS2812FX_Command _btCommand;
++    // WS2812FX_Status _status;
++    // WS2812FX_Config _config;
++    // QromaPointManifest _manifest;
++
++    QromaStripConfig _config;
++
++
++    void applySegmentAnimation(int segmentIndex, QromaStrip_WS2812FX_Animation * animation);
++    void updateWs2812FxSegments(int numSegments, QromaStrip_WS2812FX_Segment * segments, QromaStrip_WS2812FX_Animation * animations);
++
++    void copyQromaStripAnimation(QromaStrip_WS2812FX_Animation * dest, QromaStrip_WS2812FX_Animation * src);
++    void copyQromaStripSegment(QromaStrip_WS2812FX_Segment * dest, QromaStrip_WS2812FX_Segment * src);
++
++    void resetSegmentsForNewLedCount(uint32_t newLedCount);
++
++    // void notifyWs2812FxConfigChanged();
++};
++
++#endif
+diff --git a/firmware/esp32/qroma-lights/src/qroma-lights/ws2812fx/qroma_init_settings.h b/firmware/esp32/qroma-lights/src/qroma-lights/ws2812fx/qroma_init_settings.h
+new file mode 100644
+index 0000000..793eb60
+--- /dev/null
++++ b/firmware/esp32/qroma-lights/src/qroma-lights/ws2812fx/qroma_init_settings.h
+@@ -0,0 +1,26 @@
++#ifndef QROMA_INIT_SETTINGS_H
++#define QROMA_INIT_SETTINGS_H
++
++// #include <Adafruit_NeoPixel.h>
++// #include <qroma-proto/driver-ws2812fx.pb.h>
++
++// #define DEFAULT_QROMA_POINT_COUNT   1
++#define MAX_QP_SEGMENT_COUNT   sizeof(((QromaStrip_WS2812FX_SegmentsDefinition){0}).segments) / sizeof(((QromaStrip_WS2812FX_SegmentsDefinition){0}).segments[0])
++
++
++// #define QS_DEVICE_NAME "QromaStrip-2021.12.14"
++// #define QS_STRIP_1_NAME "Strip 1"
++
++#define QS_1_LED_PIN 14
++#define QS_1_LED_COUNT 32
++
++#define QS_2_LED_PIN 15
++
++#define DEFAULT_QS_WS2812FX_BRIGHTNESS 30
++// #define DEFAULT_QS_WS2812FX_NEOPIXEL_CONFIG      NEO_GRB + NEO_KHZ800
++
++#define DEFAULT_QS_WS2812FX_NEOPIXEL_RGB_ORDER    QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_GRB
++#define DEFAULT_QS_WS2812FX_NEOPIXEL_TX_RATE      QromaStrip_WS2812FX_NeoPixelTxRate_QSNPTR_400_KHZ
++
++
++#endif
+\ No newline at end of file
+diff --git a/firmware/esp32/qroma-lights/src/qroma-lights/ws2812fx/ws2812fx_utils.cpp b/firmware/esp32/qroma-lights/src/qroma-lights/ws2812fx/ws2812fx_utils.cpp
+new file mode 100644
+index 0000000..2c1d33d
+--- /dev/null
++++ b/firmware/esp32/qroma-lights/src/qroma-lights/ws2812fx/ws2812fx_utils.cpp
+@@ -0,0 +1,246 @@
++#include "ws2812fx_utils.h"
++#include "qroma_init_settings.h"
++#include <qroma/qroma.h>
++
++
++void doInitializeQromaStripDefaultStartupAnimations_Ws2812FX(QromaStrip_WS2812FX_StartupAnimations * startupAnimations, uint32_t numSegments) {
++  
++  for (int i=0; i < numSegments; i++) {
++    QromaStrip_WS2812FX_Animation * animation = &(startupAnimations->segmentAnimations[i]);
++
++    // animation->pattern = QromaStrip_WS2812FX_Pattern_QSP_STATIC;
++    animation->pattern = QromaStrip_WS2812FX_Pattern_QSP_RAINBOW_CYCLE;
++
++    const uint32_t INIT_BRIGHTNESS = 0;
++
++    animation->color1.red = INIT_BRIGHTNESS;
++    animation->color1.green = INIT_BRIGHTNESS;
++    animation->color1.blue = INIT_BRIGHTNESS;
++
++    animation->color2.red = INIT_BRIGHTNESS;
++    animation->color2.green = INIT_BRIGHTNESS;
++    animation->color2.blue = INIT_BRIGHTNESS;
++
++    animation->color3.red = INIT_BRIGHTNESS;
++    animation->color3.green = INIT_BRIGHTNESS;
++    animation->color3.blue = INIT_BRIGHTNESS;
++
++    animation->speed = 1000;
++    animation->reversed = false;
++    animation->fadeSpeed = QromaStrip_WS2812FX_FadeSpeed_QSFS_MEDIUM;
++    animation->size = QromaStrip_WS2812FX_PixelsSize_QSPS_MEDIUM;
++  }
++}
++
++
++void doInitializeQromaStripDefaultSegmentsDefinition_Ws2812FX(QromaStrip_WS2812FX_SegmentsDefinition * segmentsDefinition) {
++  logInfo("INITIALIZING SEGMENTS DEFINITION - QROMA STRIP WS2812FX");
++
++  segmentsDefinition->brightness = DEFAULT_QS_WS2812FX_BRIGHTNESS;
++  segmentsDefinition->numSegments = 1;
++  segmentsDefinition->maxNumSegments = MAX_QP_SEGMENT_COUNT;
++  segmentsDefinition->segments[0].startIndex = 0;
++  segmentsDefinition->segments[0].endIndex = QS_1_LED_COUNT - 1;
++}
++
++
++uint32_t convertQromaStripColorToUint(QromaStripColor * qromaStripColor) {
++  uint32_t color = (uint32_t)(qromaStripColor->red << 16 | qromaStripColor->green << 8 | qromaStripColor->blue);
++  return color;
++}
++  
++
++uint8_t calculateQromaStripAnimationOptions(QromaStrip_WS2812FX_Animation * animation) {
++  uint8_t options = 0;
++  if (animation->reversed) {
++    options += REVERSE;
++  }
++  if (animation->useGammaCorrection) {
++    options += GAMMA;
++  }
++
++  switch (animation->fadeSpeed) {
++    
++    case QromaStrip_WS2812FX_FadeSpeed_QSFS_XFAST:
++      options += FADE_XFAST;
++      break;
++    case QromaStrip_WS2812FX_FadeSpeed_QSFS_FAST:
++      options += FADE_FAST;
++      break;
++    case QromaStrip_WS2812FX_FadeSpeed_QSFS_MEDIUM:
++      options += FADE_MEDIUM;
++      break;
++    case QromaStrip_WS2812FX_FadeSpeed_QSFS_SLOW:
++      options += FADE_SLOW;
++      break;
++    case QromaStrip_WS2812FX_FadeSpeed_QSFS_XSLOW:
++      options += FADE_XSLOW;
++      break;
++    case QromaStrip_WS2812FX_FadeSpeed_QSFS_XXSLOW:
++      options += FADE_XXSLOW;
++      break;
++    case QromaStrip_WS2812FX_FadeSpeed_QSFS_GLACIAL:
++      options += FADE_GLACIAL;
++      break;
++    default:
++      break;
++  }
++
++  switch (animation->size) {
++    case QromaStrip_WS2812FX_PixelsSize_QSPS_SMALL:
++      options += SIZE_SMALL;
++      break;
++    case QromaStrip_WS2812FX_PixelsSize_QSPS_MEDIUM:
++      options += SIZE_MEDIUM;
++      break;
++    case QromaStrip_WS2812FX_PixelsSize_QSPS_LARGE:
++      options += SIZE_LARGE;
++      break;
++    case QromaStrip_WS2812FX_PixelsSize_QSPS_XLARGE:
++      options += SIZE_XLARGE;
++      break;
++    default:
++      break;
++  }
++
++  return options;
++}
++
++
++
++int mapRgbOrderToNeoPixelValue(QromaStrip_WS2812FX_NeoPixelRgbOrder rgbOrder) {
++  int mappedRgbOrder = 0;
++
++  switch (rgbOrder) {
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_RGB:
++      mappedRgbOrder = NEO_RGB;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_RBG:
++      mappedRgbOrder = NEO_RBG;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_GRB:
++      mappedRgbOrder = NEO_GRB;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_GBR:
++      mappedRgbOrder = NEO_GBR;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_BRG:
++      mappedRgbOrder = NEO_BRG;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_BGR:
++      mappedRgbOrder = NEO_BGR;
++      break;
++
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_WRGB:
++      mappedRgbOrder = NEO_WRGB;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_WRBG:
++      mappedRgbOrder = NEO_WRBG;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_WGRB:
++      mappedRgbOrder = NEO_WGRB;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_WGBR:
++      mappedRgbOrder = NEO_WGBR;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_WBRG:
++      mappedRgbOrder = NEO_WBRG;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_WBGR:
++      mappedRgbOrder = NEO_WBGR;
++      break;
++
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_RWGB:
++      mappedRgbOrder = NEO_RWGB;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_RWBG:
++      mappedRgbOrder = NEO_RWBG;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_RGWB:
++      mappedRgbOrder = NEO_RGWB;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_RGBW:
++      mappedRgbOrder = NEO_RGBW;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_RBWG:
++      mappedRgbOrder = NEO_RBWG;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_RBGW:
++      mappedRgbOrder = NEO_RBGW;
++      break;
++
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_GWRB:
++      mappedRgbOrder = NEO_GWRB;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_GWBR:
++      mappedRgbOrder = NEO_GWBR;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_GRWB:
++      mappedRgbOrder = NEO_GRWB;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_GRBW:
++      mappedRgbOrder = NEO_GRBW;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_GBWR:
++      mappedRgbOrder = NEO_GBWR;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_GBRW:
++      mappedRgbOrder = NEO_GBRW;
++      break;
++
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_BWRG:
++      mappedRgbOrder = NEO_BWRG;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_BWGR:
++      mappedRgbOrder = NEO_BWGR;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_BRWG:
++      mappedRgbOrder = NEO_BRWG;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_BRGW:
++      mappedRgbOrder = NEO_BRGW;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_BGWR:
++      mappedRgbOrder = NEO_BGWR;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelRgbOrder_QSNPO_NEO_BGRW:
++      mappedRgbOrder = NEO_BGRW;
++      break;
++    default:
++      logError("Unexpected value for mapping RGB order");
++      logError(rgbOrder);
++  }
++
++  return mappedRgbOrder;
++}
++
++
++int mapTxRateToNeoPixelValue(QromaStrip_WS2812FX_NeoPixelTxRate txRate) {
++  int mappedTxRate = 0;
++
++  switch (txRate) {
++    case QromaStrip_WS2812FX_NeoPixelTxRate_QSNPTR_400_KHZ:
++      mappedTxRate = NEO_KHZ400;
++      break;
++    case QromaStrip_WS2812FX_NeoPixelTxRate_QSNPTR_800_KHZ:
++      mappedTxRate = NEO_KHZ800;
++      break;
++    default:
++      logError("Unexpected value for mapping TX rate");
++      logError(txRate);
++  }
++
++  return mappedTxRate;
++}
++
++
++neoPixelType mapRgbOrderAndTxRateToNeoPixelType(QromaStrip_WS2812FX_NeoPixelRgbOrder rgbOrder, 
++  QromaStrip_WS2812FX_NeoPixelTxRate txRate) 
++{
++  // #define DEFAULT_QS_WS2812FX_NEOPIXEL_CONFIG      NEO_GRB + NEO_KHZ800
++  int mappedRgbOrder = mapRgbOrderToNeoPixelValue(rgbOrder);
++  int mappedTxRate = mapTxRateToNeoPixelValue(txRate);
++
++  return mappedRgbOrder + mappedTxRate;
++}
++
+diff --git a/firmware/esp32/qroma-lights/src/qroma-lights/ws2812fx/ws2812fx_utils.h b/firmware/esp32/qroma-lights/src/qroma-lights/ws2812fx/ws2812fx_utils.h
+new file mode 100644
+index 0000000..92fb8b8
+--- /dev/null
++++ b/firmware/esp32/qroma-lights/src/qroma-lights/ws2812fx/ws2812fx_utils.h
+@@ -0,0 +1,22 @@
++#ifndef WS2812FX_UTILS_H
++#define WS2812FX_UTILS_H
++
++#include <qroma-proto/hello-qroma.pb.h>
++#include <qroma-proto/qroma-lights-types.pb.h>
++#include <WS2812FX.h>
++
++const int COLOR_COUNT = 3;
++// const int BYTES_PER_INCOMING_COLOR = 3;
++
++void doInitializeQromaStripDefaultSegmentsDefinition_Ws2812FX(QromaStrip_WS2812FX_SegmentsDefinition * segmentsDefinition);
++void doInitializeQromaStripDefaultStartupAnimations_Ws2812FX(QromaStrip_WS2812FX_StartupAnimations * startupAnimations, uint32_t numSegments);
++
++uint32_t convertColorRgbBytesToUint(pb_byte_t * colorRgbBytes, int index);
++uint32_t convertQromaStripColorToUint(QromaStripColor * qromaStripColor);
++uint8_t calculateQromaStripAnimationOptions(QromaStrip_WS2812FX_Animation * animation);
++
++int mapRgbOrderToNeoPixelValue(QromaStrip_WS2812FX_NeoPixelRgbOrder rgbOrder);
++int mapTxRateToNeoPixelValue(QromaStrip_WS2812FX_NeoPixelTxRate txRate);
++neoPixelType mapRgbOrderAndTxRateToNeoPixelType(QromaStrip_WS2812FX_NeoPixelRgbOrder rgbOrder, QromaStrip_WS2812FX_NeoPixelTxRate txRate);
++
++#endif
+-- 
+2.32.0.windows.2
+
