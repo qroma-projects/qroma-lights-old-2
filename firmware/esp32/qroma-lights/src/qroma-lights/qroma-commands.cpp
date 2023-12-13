@@ -1,5 +1,7 @@
 #include "qroma-commands.h"
 #include "qroma/qroma.h"
+#include "qroma-lights-handler.h"
+#include "qroma-strip-handler.h"
 
 
 SetUpdateConfiguration updateConfiguration = SetUpdateConfiguration_init_zero; 
@@ -34,9 +36,23 @@ void onMyAppCommand(MyAppCommand * message, MyAppResponse * response) {
       response->response.pingResponse = PingResponse_init_zero;
       response->response.pingResponse.pingId = message->command.pingRequest.pingId;
       response->response.pingResponse.uptime = millis();
+      break;
+    case MyAppCommand_qromaDeviceCommand_tag:
+      response->which_response = MyAppResponse_qromaDeviceResponse_tag;
+      handleQromaLightsCommand(&(message->command.qromaDeviceCommand), &(response->response.qromaDeviceResponse));
+      break;
+    case MyAppCommand_qromaStripCommand_tag:
+      response->which_response = MyAppResponse_qromaStripResponse_tag;
+      handleQromaStripCommand(&(message->command.qromaStripCommand), &(response->response.qromaStripResponse));
+      break;
     default:
       logError("Unrecognized MyAppCommand command");
       logError(message->which_command);
       break;
   }
+}
+
+
+bool hasQromaStartupCommandsFile() {
+  return false;
 }

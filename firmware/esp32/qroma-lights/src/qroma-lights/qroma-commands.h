@@ -5,4 +5,6 @@
 
 void onMyAppCommand(MyAppCommand * message, MyAppResponse * hqr);
 
+bool hasQromaStartupCommandsFile();
+
 #endif
