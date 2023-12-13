@@ -1,0 +1,7 @@
+# QromaStrip_WS2812FX_LedsConfig.segments  max_count: 5  fixed_count:true
+# QromaStrip_WS2812FX_LedsConfig.segmentAnimations  max_count: 5  fixed_count:true
+
+# QromaStrip_WS2812FX_Animation.threeSetsOfColorRgbBytes  max_size:9  fixed_length:true
+
+SetQromaStrip_WS2812FX_Segments.segments  max_count:5  fixed_count:true
+# SetQromaStrip_WS2812FX_Segments.animations  max_count:5  fixed_count:true

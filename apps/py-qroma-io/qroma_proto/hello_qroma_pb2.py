@@ -12,6 +12,8 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
+import qroma_strip_command_pb2 as qroma__strip__command__pb2
+import qroma_lights_command_pb2 as qroma__lights__command__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
@@ -20,8 +22,9 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x11hello-qroma.proto\"!\n\x11HelloQromaRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"M\n\x12HelloQromaResponse\x12\x10\n\x08response\x18\x01 \x01(\t\x12\x11\n\tcallCount\x18\x02 \x01(\r\x12\x12\n\nnameLength\x18\x03 \x01(\r\"?\n\x0bMathRequest\x12\t\n\x01\x61\x18\x01 \x01(\r\x12\t\n\x01\x62\x18\x02 \x01(\r\x12\x1a\n\x02op\x18\x03 \x01(\x0e\x32\x0e.MathOperation\" \n\x0eMathResult_Add\x12\x0e\n\x06result\x18\x01 \x01(\r\"%\n\x13MathResult_Subtract\x12\x0e\n\x06result\x18\x01 \x01(\r\"F\n\x19MathResult_AddAndSubtract\x12\x11\n\taddResult\x18\x01 \x01(\r\x12\x16\n\x0esubtractResult\x18\x02 \x01(\r\"\xac\x01\n\x0cMathResponse\x12$\n\taddResult\x18\x01 \x01(\x0b\x32\x0f.MathResult_AddH\x00\x12.\n\x0esubtractResult\x18\x02 \x01(\x0b\x32\x14.MathResult_SubtractH\x00\x12:\n\x14\x61\x64\x64\x41ndSubtractResult\x18\x03 \x01(\x0b\x32\x1a.MathResult_AddAndSubtractH\x00\x42\n\n\x08response\"U\n\x16SetUpdateConfiguration\x12\x1f\n\nupdateType\x18\x01 \x01(\x0e\x32\x0b.UpdateType\x12\x1a\n\x12updateIntervalInMs\x18\x02 \x01(\r\"1\n\x1eSetUpdateConfigurationResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"4\n\x1aSetUpdateProgressIndicator\x12\x16\n\x0eindicatorChars\x18\x01 \x01(\t\"L\n\"SetUpdateProgressIndicatorResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x15\n\rstatusMessage\x18\x02 \x01(\t\"&\n\x14UptimeUpdateResponse\x12\x0e\n\x06uptime\x18\x01 \x01(\r\"<\n\x1fProgressIndicatorUpdateResponse\x12\x19\n\x11progressIndicator\x18\x01 \x01(\t\"\x9e\x01\n\x0eUpdateResponse\x12\x35\n\x14uptimeUpdateResponse\x18\x01 \x01(\x0b\x32\x15.UptimeUpdateResponseH\x00\x12K\n\x1fprogressIndicatorUpdateResponse\x18\x02 \x01(\x0b\x32 .ProgressIndicatorUpdateResponseH\x00\x42\x08\n\x06update\"\x1d\n\x0bPingRequest\x12\x0e\n\x06pingId\x18\x01 \x01(\r\".\n\x0cPingResponse\x12\x0e\n\x06pingId\x18\x01 \x01(\r\x12\x0e\n\x06uptime\x18\x02 \x01(\r\"\x92\x02\n\x0cMyAppCommand\x12/\n\x11helloQromaRequest\x18\x01 \x01(\x0b\x32\x12.HelloQromaRequestH\x00\x12#\n\x0bmathRequest\x18\x02 \x01(\x0b\x32\x0c.MathRequestH\x00\x12\x39\n\x16setUpdateConfiguration\x18\x03 \x01(\x0b\x32\x17.SetUpdateConfigurationH\x00\x12\x41\n\x1asetUpdateProgressIndicator\x18\x04 \x01(\x0b\x32\x1b.SetUpdateProgressIndicatorH\x00\x12#\n\x0bpingRequest\x18\x05 \x01(\x0b\x32\x0c.PingRequestH\x00\x42\t\n\x07\x63ommand\"\xdd\x02\n\rMyAppResponse\x12\x31\n\x12helloQromaResponse\x18\x01 \x01(\x0b\x32\x13.HelloQromaResponseH\x00\x12%\n\x0cmathResponse\x18\x02 \x01(\x0b\x32\r.MathResponseH\x00\x12I\n\x1esetUpdateConfigurationResponse\x18\x03 \x01(\x0b\x32\x1f.SetUpdateConfigurationResponseH\x00\x12Q\n\"setUpdateProgressIndicatorResponse\x18\x04 \x01(\x0b\x32#.SetUpdateProgressIndicatorResponseH\x00\x12%\n\x0cpingResponse\x18\x05 \x01(\x0b\x32\r.PingResponseH\x00\x12!\n\x06update\x18\x06 \x01(\x0b\x32\x0f.UpdateResponseH\x00\x42\n\n\x08response*d\n\rMathOperation\x12\x11\n\rMathOp_NotSet\x10\x00\x12\x0e\n\nMathOp_Add\x10\x01\x12\x13\n\x0fMathOp_Subtract\x10\x02\x12\x1b\n\x17MathOp_Add_And_Subtract\x10\x03*s\n\nUpdateType\x12\x15\n\x11UpdateType_NotSet\x10\x00\x12\x13\n\x0fUpdateType_None\x10\x01\x12\x17\n\x13UpdateType_Interval\x10\x02\x12 \n\x1cUpdateType_ProgressIndicator\x10\x03\x62\x06proto3'
-)
+  serialized_pb=b'\n\x11hello-qroma.proto\x1a\x19qroma-strip-command.proto\x1a\x1aqroma-lights-command.proto\"!\n\x11HelloQromaRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"M\n\x12HelloQromaResponse\x12\x10\n\x08response\x18\x01 \x01(\t\x12\x11\n\tcallCount\x18\x02 \x01(\r\x12\x12\n\nnameLength\x18\x03 \x01(\r\"?\n\x0bMathRequest\x12\t\n\x01\x61\x18\x01 \x01(\r\x12\t\n\x01\x62\x18\x02 \x01(\r\x12\x1a\n\x02op\x18\x03 \x01(\x0e\x32\x0e.MathOperation\" \n\x0eMathResult_Add\x12\x0e\n\x06result\x18\x01 \x01(\r\"%\n\x13MathResult_Subtract\x12\x0e\n\x06result\x18\x01 \x01(\r\"F\n\x19MathResult_AddAndSubtract\x12\x11\n\taddResult\x18\x01 \x01(\r\x12\x16\n\x0esubtractResult\x18\x02 \x01(\r\"\xac\x01\n\x0cMathResponse\x12$\n\taddResult\x18\x01 \x01(\x0b\x32\x0f.MathResult_AddH\x00\x12.\n\x0esubtractResult\x18\x02 \x01(\x0b\x32\x14.MathResult_SubtractH\x00\x12:\n\x14\x61\x64\x64\x41ndSubtractResult\x18\x03 \x01(\x0b\x32\x1a.MathResult_AddAndSubtractH\x00\x42\n\n\x08response\"U\n\x16SetUpdateConfiguration\x12\x1f\n\nupdateType\x18\x01 \x01(\x0e\x32\x0b.UpdateType\x12\x1a\n\x12updateIntervalInMs\x18\x02 \x01(\r\"1\n\x1eSetUpdateConfigurationResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"4\n\x1aSetUpdateProgressIndicator\x12\x16\n\x0eindicatorChars\x18\x01 \x01(\t\"L\n\"SetUpdateProgressIndicatorResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x15\n\rstatusMessage\x18\x02 \x01(\t\"&\n\x14UptimeUpdateResponse\x12\x0e\n\x06uptime\x18\x01 \x01(\r\"<\n\x1fProgressIndicatorUpdateResponse\x12\x19\n\x11progressIndicator\x18\x01 \x01(\t\"\x9e\x01\n\x0eUpdateResponse\x12\x35\n\x14uptimeUpdateResponse\x18\x01 \x01(\x0b\x32\x15.UptimeUpdateResponseH\x00\x12K\n\x1fprogressIndicatorUpdateResponse\x18\x02 \x01(\x0b\x32 .ProgressIndicatorUpdateResponseH\x00\x42\x08\n\x06update\"\x1d\n\x0bPingRequest\x12\x0e\n\x06pingId\x18\x01 \x01(\r\".\n\x0cPingResponse\x12\x0e\n\x06pingId\x18\x01 \x01(\r\x12\x0e\n\x06uptime\x18\x02 \x01(\r\"\xf6\x02\n\x0cMyAppCommand\x12/\n\x11helloQromaRequest\x18\x01 \x01(\x0b\x32\x12.HelloQromaRequestH\x00\x12#\n\x0bmathRequest\x18\x02 \x01(\x0b\x32\x0c.MathRequestH\x00\x12\x39\n\x16setUpdateConfiguration\x18\x03 \x01(\x0b\x32\x17.SetUpdateConfigurationH\x00\x12\x41\n\x1asetUpdateProgressIndicator\x18\x04 \x01(\x0b\x32\x1b.SetUpdateProgressIndicatorH\x00\x12#\n\x0bpingRequest\x18\x05 \x01(\x0b\x32\x0c.PingRequestH\x00\x12\x31\n\x12qromaDeviceCommand\x18\n \x01(\x0b\x32\x13.QromaLightsCommandH\x00\x12/\n\x11qromaStripCommand\x18\x0b \x01(\x0b\x32\x12.QromaStripCommandH\x00\x42\t\n\x07\x63ommand\"\xc5\x03\n\rMyAppResponse\x12\x31\n\x12helloQromaResponse\x18\x01 \x01(\x0b\x32\x13.HelloQromaResponseH\x00\x12%\n\x0cmathResponse\x18\x02 \x01(\x0b\x32\r.MathResponseH\x00\x12I\n\x1esetUpdateConfigurationResponse\x18\x03 \x01(\x0b\x32\x1f.SetUpdateConfigurationResponseH\x00\x12Q\n\"setUpdateProgressIndicatorResponse\x18\x04 \x01(\x0b\x32#.SetUpdateProgressIndicatorResponseH\x00\x12%\n\x0cpingResponse\x18\x05 \x01(\x0b\x32\r.PingResponseH\x00\x12!\n\x06update\x18\x06 \x01(\x0b\x32\x0f.UpdateResponseH\x00\x12\x33\n\x13qromaDeviceResponse\x18\n \x01(\x0b\x32\x14.QromaLightsResponseH\x00\x12\x31\n\x12qromaStripResponse\x18\x0b \x01(\x0b\x32\x13.QromaStripResponseH\x00\x42\n\n\x08response*d\n\rMathOperation\x12\x11\n\rMathOp_NotSet\x10\x00\x12\x0e\n\nMathOp_Add\x10\x01\x12\x13\n\x0fMathOp_Subtract\x10\x02\x12\x1b\n\x17MathOp_Add_And_Subtract\x10\x03*s\n\nUpdateType\x12\x15\n\x11UpdateType_NotSet\x10\x00\x12\x13\n\x0fUpdateType_None\x10\x01\x12\x17\n\x13UpdateType_Interval\x10\x02\x12 \n\x1cUpdateType_ProgressIndicator\x10\x03\x62\x06proto3'
+  ,
+  dependencies=[qroma__strip__command__pb2.DESCRIPTOR,qroma__lights__command__pb2.DESCRIPTOR,])
 
 _MATHOPERATION = _descriptor.EnumDescriptor(
   name='MathOperation',
@@ -53,8 +56,8 @@ _MATHOPERATION = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1761,
-  serialized_end=1861,
+  serialized_start=2020,
+  serialized_end=2120,
 )
 _sym_db.RegisterEnumDescriptor(_MATHOPERATION)
 
@@ -89,8 +92,8 @@ _UPDATETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1863,
-  serialized_end=1978,
+  serialized_start=2122,
+  serialized_end=2237,
 )
 _sym_db.RegisterEnumDescriptor(_UPDATETYPE)
 
@@ -133,8 +136,8 @@ _HELLOQROMAREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=21,
-  serialized_end=54,
+  serialized_start=76,
+  serialized_end=109,
 )
 
 
@@ -179,8 +182,8 @@ _HELLOQROMARESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=56,
-  serialized_end=133,
+  serialized_start=111,
+  serialized_end=188,
 )
 
 
@@ -225,8 +228,8 @@ _MATHREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=135,
-  serialized_end=198,
+  serialized_start=190,
+  serialized_end=253,
 )
 
 
@@ -257,8 +260,8 @@ _MATHRESULT_ADD = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=200,
-  serialized_end=232,
+  serialized_start=255,
+  serialized_end=287,
 )
 
 
@@ -289,8 +292,8 @@ _MATHRESULT_SUBTRACT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=234,
-  serialized_end=271,
+  serialized_start=289,
+  serialized_end=326,
 )
 
 
@@ -328,8 +331,8 @@ _MATHRESULT_ADDANDSUBTRACT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=273,
-  serialized_end=343,
+  serialized_start=328,
+  serialized_end=398,
 )
 
 
@@ -379,8 +382,8 @@ _MATHRESPONSE = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=346,
-  serialized_end=518,
+  serialized_start=401,
+  serialized_end=573,
 )
 
 
@@ -418,8 +421,8 @@ _SETUPDATECONFIGURATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=520,
-  serialized_end=605,
+  serialized_start=575,
+  serialized_end=660,
 )
 
 
@@ -450,8 +453,8 @@ _SETUPDATECONFIGURATIONRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=607,
-  serialized_end=656,
+  serialized_start=662,
+  serialized_end=711,
 )
 
 
@@ -482,8 +485,8 @@ _SETUPDATEPROGRESSINDICATOR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=658,
-  serialized_end=710,
+  serialized_start=713,
+  serialized_end=765,
 )
 
 
@@ -521,8 +524,8 @@ _SETUPDATEPROGRESSINDICATORRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=712,
-  serialized_end=788,
+  serialized_start=767,
+  serialized_end=843,
 )
 
 
@@ -553,8 +556,8 @@ _UPTIMEUPDATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=790,
-  serialized_end=828,
+  serialized_start=845,
+  serialized_end=883,
 )
 
 
@@ -585,8 +588,8 @@ _PROGRESSINDICATORUPDATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=830,
-  serialized_end=890,
+  serialized_start=885,
+  serialized_end=945,
 )
 
 
@@ -629,8 +632,8 @@ _UPDATERESPONSE = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=893,
-  serialized_end=1051,
+  serialized_start=948,
+  serialized_end=1106,
 )
 
 
@@ -661,8 +664,8 @@ _PINGREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1053,
-  serialized_end=1082,
+  serialized_start=1108,
+  serialized_end=1137,
 )
 
 
@@ -700,8 +703,8 @@ _PINGRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1084,
-  serialized_end=1130,
+  serialized_start=1139,
+  serialized_end=1185,
 )
 
 
@@ -748,6 +751,20 @@ _MYAPPCOMMAND = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='qromaDeviceCommand', full_name='MyAppCommand.qromaDeviceCommand', index=5,
+      number=10, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='qromaStripCommand', full_name='MyAppCommand.qromaStripCommand', index=6,
+      number=11, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -765,8 +782,8 @@ _MYAPPCOMMAND = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=1133,
-  serialized_end=1407,
+  serialized_start=1188,
+  serialized_end=1562,
 )
 
 
@@ -820,6 +837,20 @@ _MYAPPRESPONSE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='qromaDeviceResponse', full_name='MyAppResponse.qromaDeviceResponse', index=6,
+      number=10, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='qromaStripResponse', full_name='MyAppResponse.qromaStripResponse', index=7,
+      number=11, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -837,8 +868,8 @@ _MYAPPRESPONSE = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=1410,
-  serialized_end=1759,
+  serialized_start=1565,
+  serialized_end=2018,
 )
 
 _MATHREQUEST.fields_by_name['op'].enum_type = _MATHOPERATION
@@ -868,6 +899,8 @@ _MYAPPCOMMAND.fields_by_name['mathRequest'].message_type = _MATHREQUEST
 _MYAPPCOMMAND.fields_by_name['setUpdateConfiguration'].message_type = _SETUPDATECONFIGURATION
 _MYAPPCOMMAND.fields_by_name['setUpdateProgressIndicator'].message_type = _SETUPDATEPROGRESSINDICATOR
 _MYAPPCOMMAND.fields_by_name['pingRequest'].message_type = _PINGREQUEST
+_MYAPPCOMMAND.fields_by_name['qromaDeviceCommand'].message_type = qroma__lights__command__pb2._QROMALIGHTSCOMMAND
+_MYAPPCOMMAND.fields_by_name['qromaStripCommand'].message_type = qroma__strip__command__pb2._QROMASTRIPCOMMAND
 _MYAPPCOMMAND.oneofs_by_name['command'].fields.append(
   _MYAPPCOMMAND.fields_by_name['helloQromaRequest'])
 _MYAPPCOMMAND.fields_by_name['helloQromaRequest'].containing_oneof = _MYAPPCOMMAND.oneofs_by_name['command']
@@ -883,12 +916,20 @@ _MYAPPCOMMAND.fields_by_name['setUpdateProgressIndicator'].containing_oneof = _M
 _MYAPPCOMMAND.oneofs_by_name['command'].fields.append(
   _MYAPPCOMMAND.fields_by_name['pingRequest'])
 _MYAPPCOMMAND.fields_by_name['pingRequest'].containing_oneof = _MYAPPCOMMAND.oneofs_by_name['command']
+_MYAPPCOMMAND.oneofs_by_name['command'].fields.append(
+  _MYAPPCOMMAND.fields_by_name['qromaDeviceCommand'])
+_MYAPPCOMMAND.fields_by_name['qromaDeviceCommand'].containing_oneof = _MYAPPCOMMAND.oneofs_by_name['command']
+_MYAPPCOMMAND.oneofs_by_name['command'].fields.append(
+  _MYAPPCOMMAND.fields_by_name['qromaStripCommand'])
+_MYAPPCOMMAND.fields_by_name['qromaStripCommand'].containing_oneof = _MYAPPCOMMAND.oneofs_by_name['command']
 _MYAPPRESPONSE.fields_by_name['helloQromaResponse'].message_type = _HELLOQROMARESPONSE
 _MYAPPRESPONSE.fields_by_name['mathResponse'].message_type = _MATHRESPONSE
 _MYAPPRESPONSE.fields_by_name['setUpdateConfigurationResponse'].message_type = _SETUPDATECONFIGURATIONRESPONSE
 _MYAPPRESPONSE.fields_by_name['setUpdateProgressIndicatorResponse'].message_type = _SETUPDATEPROGRESSINDICATORRESPONSE
 _MYAPPRESPONSE.fields_by_name['pingResponse'].message_type = _PINGRESPONSE
 _MYAPPRESPONSE.fields_by_name['update'].message_type = _UPDATERESPONSE
+_MYAPPRESPONSE.fields_by_name['qromaDeviceResponse'].message_type = qroma__lights__command__pb2._QROMALIGHTSRESPONSE
+_MYAPPRESPONSE.fields_by_name['qromaStripResponse'].message_type = qroma__strip__command__pb2._QROMASTRIPRESPONSE
 _MYAPPRESPONSE.oneofs_by_name['response'].fields.append(
   _MYAPPRESPONSE.fields_by_name['helloQromaResponse'])
 _MYAPPRESPONSE.fields_by_name['helloQromaResponse'].containing_oneof = _MYAPPRESPONSE.oneofs_by_name['response']
@@ -907,6 +948,12 @@ _MYAPPRESPONSE.fields_by_name['pingResponse'].containing_oneof = _MYAPPRESPONSE.
 _MYAPPRESPONSE.oneofs_by_name['response'].fields.append(
   _MYAPPRESPONSE.fields_by_name['update'])
 _MYAPPRESPONSE.fields_by_name['update'].containing_oneof = _MYAPPRESPONSE.oneofs_by_name['response']
+_MYAPPRESPONSE.oneofs_by_name['response'].fields.append(
+  _MYAPPRESPONSE.fields_by_name['qromaDeviceResponse'])
+_MYAPPRESPONSE.fields_by_name['qromaDeviceResponse'].containing_oneof = _MYAPPRESPONSE.oneofs_by_name['response']
+_MYAPPRESPONSE.oneofs_by_name['response'].fields.append(
+  _MYAPPRESPONSE.fields_by_name['qromaStripResponse'])
+_MYAPPRESPONSE.fields_by_name['qromaStripResponse'].containing_oneof = _MYAPPRESPONSE.oneofs_by_name['response']
 DESCRIPTOR.message_types_by_name['HelloQromaRequest'] = _HELLOQROMAREQUEST
 DESCRIPTOR.message_types_by_name['HelloQromaResponse'] = _HELLOQROMARESPONSE
 DESCRIPTOR.message_types_by_name['MathRequest'] = _MATHREQUEST

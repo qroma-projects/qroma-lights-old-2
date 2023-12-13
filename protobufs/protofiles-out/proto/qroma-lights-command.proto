@@ -1,0 +1,96 @@
+syntax = "proto3";
+
+import "qroma-lights-types.proto";
+
+
+message QpmCommand_SetQromaStripName {
+  string name = 1;
+}
+
+
+// message QromaPointManagementCommand {
+//   string instanceId = 1;
+//   oneof qpmCommand {
+//     QpmCommand_SetQromaStripName setQromaPointName = 2;
+//   }
+// }
+
+
+message SetQromaStripDeviceName {
+  string name = 1;
+}
+
+
+message UseCurrentSetupOnStartup {
+  uint32 delayInMs = 1;
+}
+
+
+// message RestartQromaDevice { }
+
+
+// message SetQromaLogLevel {
+//   Qroma_LogLevel logLevel = 1;
+// }
+
+
+// message SetQromaDebugCommMode {
+//   Qroma_DebugCommMode debugCommMode = 1;
+// }
+
+
+// message SetQromaCommTxIntervalInMs {
+//   uint32 txIntervalInMs = 1;
+// }
+
+
+// message SetQromaCommMaxTxMessageSizeInBytes {
+//   uint32 maxTxMessageSizeInBytes = 1;
+// }
+
+
+// message SetQromaCommConfigCommand {
+//   oneof setConfigValue {
+//     SetQromaCommTxIntervalInMs setQromaCommTxIntervalInMs = 1;
+//     SetQromaCommMaxTxMessageSizeInBytes setQromaCommMaxTxMessageSizeInBytes = 2; 
+//   }
+// }
+
+
+// message RequestQromaLightsConfig {
+//   uint32 placeholder = 1;
+// }
+
+
+// not sure how I feel about this, but let's try it out, at least
+enum NoArgCommands_QromaLightsCommand {
+  NacQlc_NotSet = 0;
+  NacQlc_UseCurrentSetupOnStartup = 1;
+  NacQlc_RestartQromaDevice = 2;
+  NacQlc_FactoryResetQromaDevice = 3;
+  NacQlc_RequestQromaLightsConfig = 4;
+}
+
+// message FactoryResetQromaDevice { }
+
+
+message QromaLightsCommand {
+  oneof command {
+    NoArgCommands_QromaLightsCommand noArgCommand = 1;
+    SetQromaStripDeviceName setQromaStripDeviceName = 2;
+    // UseCurrentSetupOnStartup useCurrentSetupOnStartup = 2;
+    // RestartQromaDevice restartQromaDevice = 3;
+    // FactoryResetQromaDevice factoryResetQromaDevice = 4;
+    // SetQromaLogLevel setQromaLogLevel = 3;
+    // SetQromaDebugCommMode setQromaDebugCommMode = 4;
+    // SetQromaCommConfigCommand setQromaCommConfigCommand = 5;
+    // RequestQromaLightsConfig requestQromaLightsConfig = 8;
+  }
+}
+
+
+message QromaLightsResponse {
+  oneof response {
+    QromaLightsConfig qromaLightsConfigResponse = 1;
+  }
+}

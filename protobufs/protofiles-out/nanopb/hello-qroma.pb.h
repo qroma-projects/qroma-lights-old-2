@@ -4,6 +4,8 @@
 #ifndef PB_HELLO_QROMA_PB_H_INCLUDED
 #define PB_HELLO_QROMA_PB_H_INCLUDED
 #include <pb.h>
+#include "qroma-strip-command.pb.h"
+#include "qroma-lights-command.pb.h"
 
 #if PB_PROTO_HEADER_VERSION != 40
 #error Regenerate this file with the current version of nanopb generator.
@@ -106,6 +108,8 @@ typedef struct _MyAppCommand {
         SetUpdateConfiguration setUpdateConfiguration;
         SetUpdateProgressIndicator setUpdateProgressIndicator;
         PingRequest pingRequest;
+        QromaLightsCommand qromaDeviceCommand;
+        QromaStripCommand qromaStripCommand;
     } command; 
 } MyAppCommand;
 
@@ -126,6 +130,8 @@ typedef struct _MyAppResponse {
         SetUpdateProgressIndicatorResponse setUpdateProgressIndicatorResponse;
         PingResponse pingResponse;
         UpdateResponse update;
+        QromaLightsResponse qromaDeviceResponse;
+        QromaStripResponse qromaStripResponse;
     } response; 
 } MyAppResponse;
 
@@ -213,6 +219,8 @@ extern "C" {
 #define MyAppCommand_setUpdateConfiguration_tag  3
 #define MyAppCommand_setUpdateProgressIndicator_tag 4
 #define MyAppCommand_pingRequest_tag             5
+#define MyAppCommand_qromaDeviceCommand_tag      10
+#define MyAppCommand_qromaStripCommand_tag       11
 #define UpdateResponse_uptimeUpdateResponse_tag  1
 #define UpdateResponse_progressIndicatorUpdateResponse_tag 2
 #define MyAppResponse_helloQromaResponse_tag     1
@@ -221,6 +229,8 @@ extern "C" {
 #define MyAppResponse_setUpdateProgressIndicatorResponse_tag 4
 #define MyAppResponse_pingResponse_tag           5
 #define MyAppResponse_update_tag                 6
+#define MyAppResponse_qromaDeviceResponse_tag    10
+#define MyAppResponse_qromaStripResponse_tag     11
 
 /* Struct field encoding specification for nanopb */
 #define HelloQromaRequest_FIELDLIST(X, a) \
@@ -324,7 +334,9 @@ X(a, STATIC,   ONEOF,    MESSAGE,  (command,helloQromaRequest,command.helloQroma
 X(a, STATIC,   ONEOF,    MESSAGE,  (command,mathRequest,command.mathRequest),   2) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (command,setUpdateConfiguration,command.setUpdateConfiguration),   3) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (command,setUpdateProgressIndicator,command.setUpdateProgressIndicator),   4) \
-X(a, STATIC,   ONEOF,    MESSAGE,  (command,pingRequest,command.pingRequest),   5)
+X(a, STATIC,   ONEOF,    MESSAGE,  (command,pingRequest,command.pingRequest),   5) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (command,qromaDeviceCommand,command.qromaDeviceCommand),  10) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (command,qromaStripCommand,command.qromaStripCommand),  11)
 #define MyAppCommand_CALLBACK NULL
 #define MyAppCommand_DEFAULT NULL
 #define MyAppCommand_command_helloQromaRequest_MSGTYPE HelloQromaRequest
@@ -332,6 +344,8 @@ X(a, STATIC,   ONEOF,    MESSAGE,  (command,pingRequest,command.pingRequest),   
 #define MyAppCommand_command_setUpdateConfiguration_MSGTYPE SetUpdateConfiguration
 #define MyAppCommand_command_setUpdateProgressIndicator_MSGTYPE SetUpdateProgressIndicator
 #define MyAppCommand_command_pingRequest_MSGTYPE PingRequest
+#define MyAppCommand_command_qromaDeviceCommand_MSGTYPE QromaLightsCommand
+#define MyAppCommand_command_qromaStripCommand_MSGTYPE QromaStripCommand
 
 #define MyAppResponse_FIELDLIST(X, a) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (response,helloQromaResponse,response.helloQromaResponse),   1) \
@@ -339,7 +353,9 @@ X(a, STATIC,   ONEOF,    MESSAGE,  (response,mathResponse,response.mathResponse)
 X(a, STATIC,   ONEOF,    MESSAGE,  (response,setUpdateConfigurationResponse,response.setUpdateConfigurationResponse),   3) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (response,setUpdateProgressIndicatorResponse,response.setUpdateProgressIndicatorResponse),   4) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (response,pingResponse,response.pingResponse),   5) \
-X(a, STATIC,   ONEOF,    MESSAGE,  (response,update,response.update),   6)
+X(a, STATIC,   ONEOF,    MESSAGE,  (response,update,response.update),   6) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (response,qromaDeviceResponse,response.qromaDeviceResponse),  10) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (response,qromaStripResponse,response.qromaStripResponse),  11)
 #define MyAppResponse_CALLBACK NULL
 #define MyAppResponse_DEFAULT NULL
 #define MyAppResponse_response_helloQromaResponse_MSGTYPE HelloQromaResponse
@@ -348,6 +364,8 @@ X(a, STATIC,   ONEOF,    MESSAGE,  (response,update,response.update),   6)
 #define MyAppResponse_response_setUpdateProgressIndicatorResponse_MSGTYPE SetUpdateProgressIndicatorResponse
 #define MyAppResponse_response_pingResponse_MSGTYPE PingResponse
 #define MyAppResponse_response_update_MSGTYPE UpdateResponse
+#define MyAppResponse_response_qromaDeviceResponse_MSGTYPE QromaLightsResponse
+#define MyAppResponse_response_qromaStripResponse_MSGTYPE QromaStripResponse
 
 extern const pb_msgdesc_t HelloQromaRequest_msg;
 extern const pb_msgdesc_t HelloQromaResponse_msg;
@@ -396,8 +414,8 @@ extern const pb_msgdesc_t MyAppResponse_msg;
 #define MathResult_AddAndSubtract_size           12
 #define MathResult_Add_size                      6
 #define MathResult_Subtract_size                 6
-#define MyAppCommand_size                        23
-#define MyAppResponse_size                       105
+#define MyAppCommand_size                        90
+#define MyAppResponse_size                       1088
 #define PingRequest_size                         6
 #define PingResponse_size                        12
 #define ProgressIndicatorUpdateResponse_size     51

@@ -9,6 +9,9 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import 'qroma-lights-command.pb.dart' as $1;
+import 'qroma-strip-command.pb.dart' as $2;
+
 import 'hello-qroma.pbenum.dart';
 
 export 'hello-qroma.pbenum.dart';
@@ -967,6 +970,8 @@ enum MyAppCommand_Command {
   setUpdateConfiguration, 
   setUpdateProgressIndicator, 
   pingRequest, 
+  qromaDeviceCommand, 
+  qromaStripCommand, 
   notSet
 }
 
@@ -977,15 +982,19 @@ class MyAppCommand extends $pb.GeneratedMessage {
     3 : MyAppCommand_Command.setUpdateConfiguration,
     4 : MyAppCommand_Command.setUpdateProgressIndicator,
     5 : MyAppCommand_Command.pingRequest,
+    10 : MyAppCommand_Command.qromaDeviceCommand,
+    11 : MyAppCommand_Command.qromaStripCommand,
     0 : MyAppCommand_Command.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'MyAppCommand', createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5])
+    ..oo(0, [1, 2, 3, 4, 5, 10, 11])
     ..aOM<HelloQromaRequest>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'helloQromaRequest', protoName: 'helloQromaRequest', subBuilder: HelloQromaRequest.create)
     ..aOM<MathRequest>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'mathRequest', protoName: 'mathRequest', subBuilder: MathRequest.create)
     ..aOM<SetUpdateConfiguration>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'setUpdateConfiguration', protoName: 'setUpdateConfiguration', subBuilder: SetUpdateConfiguration.create)
     ..aOM<SetUpdateProgressIndicator>(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'setUpdateProgressIndicator', protoName: 'setUpdateProgressIndicator', subBuilder: SetUpdateProgressIndicator.create)
     ..aOM<PingRequest>(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'pingRequest', protoName: 'pingRequest', subBuilder: PingRequest.create)
+    ..aOM<$1.QromaLightsCommand>(10, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'qromaDeviceCommand', protoName: 'qromaDeviceCommand', subBuilder: $1.QromaLightsCommand.create)
+    ..aOM<$2.QromaStripCommand>(11, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'qromaStripCommand', protoName: 'qromaStripCommand', subBuilder: $2.QromaStripCommand.create)
     ..hasRequiredFields = false
   ;
 
@@ -996,6 +1005,8 @@ class MyAppCommand extends $pb.GeneratedMessage {
     SetUpdateConfiguration? setUpdateConfiguration,
     SetUpdateProgressIndicator? setUpdateProgressIndicator,
     PingRequest? pingRequest,
+    $1.QromaLightsCommand? qromaDeviceCommand,
+    $2.QromaStripCommand? qromaStripCommand,
   }) {
     final _result = create();
     if (helloQromaRequest != null) {
@@ -1012,6 +1023,12 @@ class MyAppCommand extends $pb.GeneratedMessage {
     }
     if (pingRequest != null) {
       _result.pingRequest = pingRequest;
+    }
+    if (qromaDeviceCommand != null) {
+      _result.qromaDeviceCommand = qromaDeviceCommand;
+    }
+    if (qromaStripCommand != null) {
+      _result.qromaStripCommand = qromaStripCommand;
     }
     return _result;
   }
@@ -1093,6 +1110,28 @@ class MyAppCommand extends $pb.GeneratedMessage {
   void clearPingRequest() => clearField(5);
   @$pb.TagNumber(5)
   PingRequest ensurePingRequest() => $_ensure(4);
+
+  @$pb.TagNumber(10)
+  $1.QromaLightsCommand get qromaDeviceCommand => $_getN(5);
+  @$pb.TagNumber(10)
+  set qromaDeviceCommand($1.QromaLightsCommand v) { setField(10, v); }
+  @$pb.TagNumber(10)
+  $core.bool hasQromaDeviceCommand() => $_has(5);
+  @$pb.TagNumber(10)
+  void clearQromaDeviceCommand() => clearField(10);
+  @$pb.TagNumber(10)
+  $1.QromaLightsCommand ensureQromaDeviceCommand() => $_ensure(5);
+
+  @$pb.TagNumber(11)
+  $2.QromaStripCommand get qromaStripCommand => $_getN(6);
+  @$pb.TagNumber(11)
+  set qromaStripCommand($2.QromaStripCommand v) { setField(11, v); }
+  @$pb.TagNumber(11)
+  $core.bool hasQromaStripCommand() => $_has(6);
+  @$pb.TagNumber(11)
+  void clearQromaStripCommand() => clearField(11);
+  @$pb.TagNumber(11)
+  $2.QromaStripCommand ensureQromaStripCommand() => $_ensure(6);
 }
 
 enum MyAppResponse_Response {
@@ -1102,6 +1141,8 @@ enum MyAppResponse_Response {
   setUpdateProgressIndicatorResponse, 
   pingResponse, 
   update, 
+  qromaDeviceResponse, 
+  qromaStripResponse, 
   notSet
 }
 
@@ -1113,16 +1154,20 @@ class MyAppResponse extends $pb.GeneratedMessage {
     4 : MyAppResponse_Response.setUpdateProgressIndicatorResponse,
     5 : MyAppResponse_Response.pingResponse,
     6 : MyAppResponse_Response.update,
+    10 : MyAppResponse_Response.qromaDeviceResponse,
+    11 : MyAppResponse_Response.qromaStripResponse,
     0 : MyAppResponse_Response.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'MyAppResponse', createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 10, 11])
     ..aOM<HelloQromaResponse>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'helloQromaResponse', protoName: 'helloQromaResponse', subBuilder: HelloQromaResponse.create)
     ..aOM<MathResponse>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'mathResponse', protoName: 'mathResponse', subBuilder: MathResponse.create)
     ..aOM<SetUpdateConfigurationResponse>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'setUpdateConfigurationResponse', protoName: 'setUpdateConfigurationResponse', subBuilder: SetUpdateConfigurationResponse.create)
     ..aOM<SetUpdateProgressIndicatorResponse>(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'setUpdateProgressIndicatorResponse', protoName: 'setUpdateProgressIndicatorResponse', subBuilder: SetUpdateProgressIndicatorResponse.create)
     ..aOM<PingResponse>(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'pingResponse', protoName: 'pingResponse', subBuilder: PingResponse.create)
     ..aOM<UpdateResponse>(6, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'update', subBuilder: UpdateResponse.create)
+    ..aOM<$1.QromaLightsResponse>(10, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'qromaDeviceResponse', protoName: 'qromaDeviceResponse', subBuilder: $1.QromaLightsResponse.create)
+    ..aOM<$2.QromaStripResponse>(11, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'qromaStripResponse', protoName: 'qromaStripResponse', subBuilder: $2.QromaStripResponse.create)
     ..hasRequiredFields = false
   ;
 
@@ -1134,6 +1179,8 @@ class MyAppResponse extends $pb.GeneratedMessage {
     SetUpdateProgressIndicatorResponse? setUpdateProgressIndicatorResponse,
     PingResponse? pingResponse,
     UpdateResponse? update,
+    $1.QromaLightsResponse? qromaDeviceResponse,
+    $2.QromaStripResponse? qromaStripResponse,
   }) {
     final _result = create();
     if (helloQromaResponse != null) {
@@ -1153,6 +1200,12 @@ class MyAppResponse extends $pb.GeneratedMessage {
     }
     if (update != null) {
       _result.update = update;
+    }
+    if (qromaDeviceResponse != null) {
+      _result.qromaDeviceResponse = qromaDeviceResponse;
+    }
+    if (qromaStripResponse != null) {
+      _result.qromaStripResponse = qromaStripResponse;
     }
     return _result;
   }
@@ -1245,5 +1298,27 @@ class MyAppResponse extends $pb.GeneratedMessage {
   void clearUpdate() => clearField(6);
   @$pb.TagNumber(6)
   UpdateResponse ensureUpdate() => $_ensure(5);
+
+  @$pb.TagNumber(10)
+  $1.QromaLightsResponse get qromaDeviceResponse => $_getN(6);
+  @$pb.TagNumber(10)
+  set qromaDeviceResponse($1.QromaLightsResponse v) { setField(10, v); }
+  @$pb.TagNumber(10)
+  $core.bool hasQromaDeviceResponse() => $_has(6);
+  @$pb.TagNumber(10)
+  void clearQromaDeviceResponse() => clearField(10);
+  @$pb.TagNumber(10)
+  $1.QromaLightsResponse ensureQromaDeviceResponse() => $_ensure(6);
+
+  @$pb.TagNumber(11)
+  $2.QromaStripResponse get qromaStripResponse => $_getN(7);
+  @$pb.TagNumber(11)
+  set qromaStripResponse($2.QromaStripResponse v) { setField(11, v); }
+  @$pb.TagNumber(11)
+  $core.bool hasQromaStripResponse() => $_has(7);
+  @$pb.TagNumber(11)
+  void clearQromaStripResponse() => clearField(11);
+  @$pb.TagNumber(11)
+  $2.QromaStripResponse ensureQromaStripResponse() => $_ensure(7);
 }
 

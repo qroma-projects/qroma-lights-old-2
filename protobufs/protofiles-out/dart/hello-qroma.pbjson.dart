@@ -220,6 +220,8 @@ const MyAppCommand$json = const {
     const {'1': 'setUpdateConfiguration', '3': 3, '4': 1, '5': 11, '6': '.SetUpdateConfiguration', '9': 0, '10': 'setUpdateConfiguration'},
     const {'1': 'setUpdateProgressIndicator', '3': 4, '4': 1, '5': 11, '6': '.SetUpdateProgressIndicator', '9': 0, '10': 'setUpdateProgressIndicator'},
     const {'1': 'pingRequest', '3': 5, '4': 1, '5': 11, '6': '.PingRequest', '9': 0, '10': 'pingRequest'},
+    const {'1': 'qromaDeviceCommand', '3': 10, '4': 1, '5': 11, '6': '.QromaLightsCommand', '9': 0, '10': 'qromaDeviceCommand'},
+    const {'1': 'qromaStripCommand', '3': 11, '4': 1, '5': 11, '6': '.QromaStripCommand', '9': 0, '10': 'qromaStripCommand'},
   ],
   '8': const [
     const {'1': 'command'},
@@ -227,7 +229,7 @@ const MyAppCommand$json = const {
 };
 
 /// Descriptor for `MyAppCommand`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List myAppCommandDescriptor = $convert.base64Decode('CgxNeUFwcENvbW1hbmQSQgoRaGVsbG9Rcm9tYVJlcXVlc3QYASABKAsyEi5IZWxsb1Fyb21hUmVxdWVzdEgAUhFoZWxsb1Fyb21hUmVxdWVzdBIwCgttYXRoUmVxdWVzdBgCIAEoCzIMLk1hdGhSZXF1ZXN0SABSC21hdGhSZXF1ZXN0ElEKFnNldFVwZGF0ZUNvbmZpZ3VyYXRpb24YAyABKAsyFy5TZXRVcGRhdGVDb25maWd1cmF0aW9uSABSFnNldFVwZGF0ZUNvbmZpZ3VyYXRpb24SXQoac2V0VXBkYXRlUHJvZ3Jlc3NJbmRpY2F0b3IYBCABKAsyGy5TZXRVcGRhdGVQcm9ncmVzc0luZGljYXRvckgAUhpzZXRVcGRhdGVQcm9ncmVzc0luZGljYXRvchIwCgtwaW5nUmVxdWVzdBgFIAEoCzIMLlBpbmdSZXF1ZXN0SABSC3BpbmdSZXF1ZXN0QgkKB2NvbW1hbmQ=');
+final $typed_data.Uint8List myAppCommandDescriptor = $convert.base64Decode('CgxNeUFwcENvbW1hbmQSQgoRaGVsbG9Rcm9tYVJlcXVlc3QYASABKAsyEi5IZWxsb1Fyb21hUmVxdWVzdEgAUhFoZWxsb1Fyb21hUmVxdWVzdBIwCgttYXRoUmVxdWVzdBgCIAEoCzIMLk1hdGhSZXF1ZXN0SABSC21hdGhSZXF1ZXN0ElEKFnNldFVwZGF0ZUNvbmZpZ3VyYXRpb24YAyABKAsyFy5TZXRVcGRhdGVDb25maWd1cmF0aW9uSABSFnNldFVwZGF0ZUNvbmZpZ3VyYXRpb24SXQoac2V0VXBkYXRlUHJvZ3Jlc3NJbmRpY2F0b3IYBCABKAsyGy5TZXRVcGRhdGVQcm9ncmVzc0luZGljYXRvckgAUhpzZXRVcGRhdGVQcm9ncmVzc0luZGljYXRvchIwCgtwaW5nUmVxdWVzdBgFIAEoCzIMLlBpbmdSZXF1ZXN0SABSC3BpbmdSZXF1ZXN0EkUKEnFyb21hRGV2aWNlQ29tbWFuZBgKIAEoCzITLlFyb21hTGlnaHRzQ29tbWFuZEgAUhJxcm9tYURldmljZUNvbW1hbmQSQgoRcXJvbWFTdHJpcENvbW1hbmQYCyABKAsyEi5Rcm9tYVN0cmlwQ29tbWFuZEgAUhFxcm9tYVN0cmlwQ29tbWFuZEIJCgdjb21tYW5k');
 @$core.Deprecated('Use myAppResponseDescriptor instead')
 const MyAppResponse$json = const {
   '1': 'MyAppResponse',
@@ -238,6 +240,8 @@ const MyAppResponse$json = const {
     const {'1': 'setUpdateProgressIndicatorResponse', '3': 4, '4': 1, '5': 11, '6': '.SetUpdateProgressIndicatorResponse', '9': 0, '10': 'setUpdateProgressIndicatorResponse'},
     const {'1': 'pingResponse', '3': 5, '4': 1, '5': 11, '6': '.PingResponse', '9': 0, '10': 'pingResponse'},
     const {'1': 'update', '3': 6, '4': 1, '5': 11, '6': '.UpdateResponse', '9': 0, '10': 'update'},
+    const {'1': 'qromaDeviceResponse', '3': 10, '4': 1, '5': 11, '6': '.QromaLightsResponse', '9': 0, '10': 'qromaDeviceResponse'},
+    const {'1': 'qromaStripResponse', '3': 11, '4': 1, '5': 11, '6': '.QromaStripResponse', '9': 0, '10': 'qromaStripResponse'},
   ],
   '8': const [
     const {'1': 'response'},
@@ -245,4 +249,4 @@ const MyAppResponse$json = const {
 };
 
 /// Descriptor for `MyAppResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List myAppResponseDescriptor = $convert.base64Decode('Cg1NeUFwcFJlc3BvbnNlEkUKEmhlbGxvUXJvbWFSZXNwb25zZRgBIAEoCzITLkhlbGxvUXJvbWFSZXNwb25zZUgAUhJoZWxsb1Fyb21hUmVzcG9uc2USMwoMbWF0aFJlc3BvbnNlGAIgASgLMg0uTWF0aFJlc3BvbnNlSABSDG1hdGhSZXNwb25zZRJpCh5zZXRVcGRhdGVDb25maWd1cmF0aW9uUmVzcG9uc2UYAyABKAsyHy5TZXRVcGRhdGVDb25maWd1cmF0aW9uUmVzcG9uc2VIAFIec2V0VXBkYXRlQ29uZmlndXJhdGlvblJlc3BvbnNlEnUKInNldFVwZGF0ZVByb2dyZXNzSW5kaWNhdG9yUmVzcG9uc2UYBCABKAsyIy5TZXRVcGRhdGVQcm9ncmVzc0luZGljYXRvclJlc3BvbnNlSABSInNldFVwZGF0ZVByb2dyZXNzSW5kaWNhdG9yUmVzcG9uc2USMwoMcGluZ1Jlc3BvbnNlGAUgASgLMg0uUGluZ1Jlc3BvbnNlSABSDHBpbmdSZXNwb25zZRIpCgZ1cGRhdGUYBiABKAsyDy5VcGRhdGVSZXNwb25zZUgAUgZ1cGRhdGVCCgoIcmVzcG9uc2U=');
+final $typed_data.Uint8List myAppResponseDescriptor = $convert.base64Decode('Cg1NeUFwcFJlc3BvbnNlEkUKEmhlbGxvUXJvbWFSZXNwb25zZRgBIAEoCzITLkhlbGxvUXJvbWFSZXNwb25zZUgAUhJoZWxsb1Fyb21hUmVzcG9uc2USMwoMbWF0aFJlc3BvbnNlGAIgASgLMg0uTWF0aFJlc3BvbnNlSABSDG1hdGhSZXNwb25zZRJpCh5zZXRVcGRhdGVDb25maWd1cmF0aW9uUmVzcG9uc2UYAyABKAsyHy5TZXRVcGRhdGVDb25maWd1cmF0aW9uUmVzcG9uc2VIAFIec2V0VXBkYXRlQ29uZmlndXJhdGlvblJlc3BvbnNlEnUKInNldFVwZGF0ZVByb2dyZXNzSW5kaWNhdG9yUmVzcG9uc2UYBCABKAsyIy5TZXRVcGRhdGVQcm9ncmVzc0luZGljYXRvclJlc3BvbnNlSABSInNldFVwZGF0ZVByb2dyZXNzSW5kaWNhdG9yUmVzcG9uc2USMwoMcGluZ1Jlc3BvbnNlGAUgASgLMg0uUGluZ1Jlc3BvbnNlSABSDHBpbmdSZXNwb25zZRIpCgZ1cGRhdGUYBiABKAsyDy5VcGRhdGVSZXNwb25zZUgAUgZ1cGRhdGUSSAoTcXJvbWFEZXZpY2VSZXNwb25zZRgKIAEoCzIULlFyb21hTGlnaHRzUmVzcG9uc2VIAFITcXJvbWFEZXZpY2VSZXNwb25zZRJFChJxcm9tYVN0cmlwUmVzcG9uc2UYCyABKAsyEy5Rcm9tYVN0cmlwUmVzcG9uc2VIAFIScXJvbWFTdHJpcFJlc3BvbnNlQgoKCHJlc3BvbnNl');

@@ -11,6 +11,10 @@ import type { PartialMessage } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
+import { QromaStripResponse } from "./qroma-strip-command";
+import { QromaLightsResponse } from "./qroma-lights-command";
+import { QromaStripCommand } from "./qroma-strip-command";
+import { QromaLightsCommand } from "./qroma-lights-command";
 /**
  * @generated from protobuf message HelloQromaRequest
  */
@@ -259,6 +263,18 @@ export interface MyAppCommand {
          */
         pingRequest: PingRequest;
     } | {
+        oneofKind: "qromaDeviceCommand";
+        /**
+         * @generated from protobuf field: QromaLightsCommand qromaDeviceCommand = 10;
+         */
+        qromaDeviceCommand: QromaLightsCommand;
+    } | {
+        oneofKind: "qromaStripCommand";
+        /**
+         * @generated from protobuf field: QromaStripCommand qromaStripCommand = 11;
+         */
+        qromaStripCommand: QromaStripCommand;
+    } | {
         oneofKind: undefined;
     };
 }
@@ -305,6 +321,18 @@ export interface MyAppResponse {
          * @generated from protobuf field: UpdateResponse update = 6;
          */
         update: UpdateResponse;
+    } | {
+        oneofKind: "qromaDeviceResponse";
+        /**
+         * @generated from protobuf field: QromaLightsResponse qromaDeviceResponse = 10;
+         */
+        qromaDeviceResponse: QromaLightsResponse;
+    } | {
+        oneofKind: "qromaStripResponse";
+        /**
+         * @generated from protobuf field: QromaStripResponse qromaStripResponse = 11;
+         */
+        qromaStripResponse: QromaStripResponse;
     } | {
         oneofKind: undefined;
     };
@@ -1203,7 +1231,9 @@ class MyAppCommand$Type extends MessageType<MyAppCommand> {
             { no: 2, name: "mathRequest", kind: "message", oneof: "command", T: () => MathRequest },
             { no: 3, name: "setUpdateConfiguration", kind: "message", oneof: "command", T: () => SetUpdateConfiguration },
             { no: 4, name: "setUpdateProgressIndicator", kind: "message", oneof: "command", T: () => SetUpdateProgressIndicator },
-            { no: 5, name: "pingRequest", kind: "message", oneof: "command", T: () => PingRequest }
+            { no: 5, name: "pingRequest", kind: "message", oneof: "command", T: () => PingRequest },
+            { no: 10, name: "qromaDeviceCommand", kind: "message", oneof: "command", T: () => QromaLightsCommand },
+            { no: 11, name: "qromaStripCommand", kind: "message", oneof: "command", T: () => QromaStripCommand }
         ]);
     }
     create(value?: PartialMessage<MyAppCommand>): MyAppCommand {
@@ -1248,6 +1278,18 @@ class MyAppCommand$Type extends MessageType<MyAppCommand> {
                         pingRequest: PingRequest.internalBinaryRead(reader, reader.uint32(), options, (message.command as any).pingRequest)
                     };
                     break;
+                case /* QromaLightsCommand qromaDeviceCommand */ 10:
+                    message.command = {
+                        oneofKind: "qromaDeviceCommand",
+                        qromaDeviceCommand: QromaLightsCommand.internalBinaryRead(reader, reader.uint32(), options, (message.command as any).qromaDeviceCommand)
+                    };
+                    break;
+                case /* QromaStripCommand qromaStripCommand */ 11:
+                    message.command = {
+                        oneofKind: "qromaStripCommand",
+                        qromaStripCommand: QromaStripCommand.internalBinaryRead(reader, reader.uint32(), options, (message.command as any).qromaStripCommand)
+                    };
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -1275,6 +1317,12 @@ class MyAppCommand$Type extends MessageType<MyAppCommand> {
         /* PingRequest pingRequest = 5; */
         if (message.command.oneofKind === "pingRequest")
             PingRequest.internalBinaryWrite(message.command.pingRequest, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* QromaLightsCommand qromaDeviceCommand = 10; */
+        if (message.command.oneofKind === "qromaDeviceCommand")
+            QromaLightsCommand.internalBinaryWrite(message.command.qromaDeviceCommand, writer.tag(10, WireType.LengthDelimited).fork(), options).join();
+        /* QromaStripCommand qromaStripCommand = 11; */
+        if (message.command.oneofKind === "qromaStripCommand")
+            QromaStripCommand.internalBinaryWrite(message.command.qromaStripCommand, writer.tag(11, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1294,7 +1342,9 @@ class MyAppResponse$Type extends MessageType<MyAppResponse> {
             { no: 3, name: "setUpdateConfigurationResponse", kind: "message", oneof: "response", T: () => SetUpdateConfigurationResponse },
             { no: 4, name: "setUpdateProgressIndicatorResponse", kind: "message", oneof: "response", T: () => SetUpdateProgressIndicatorResponse },
             { no: 5, name: "pingResponse", kind: "message", oneof: "response", T: () => PingResponse },
-            { no: 6, name: "update", kind: "message", oneof: "response", T: () => UpdateResponse }
+            { no: 6, name: "update", kind: "message", oneof: "response", T: () => UpdateResponse },
+            { no: 10, name: "qromaDeviceResponse", kind: "message", oneof: "response", T: () => QromaLightsResponse },
+            { no: 11, name: "qromaStripResponse", kind: "message", oneof: "response", T: () => QromaStripResponse }
         ]);
     }
     create(value?: PartialMessage<MyAppResponse>): MyAppResponse {
@@ -1345,6 +1395,18 @@ class MyAppResponse$Type extends MessageType<MyAppResponse> {
                         update: UpdateResponse.internalBinaryRead(reader, reader.uint32(), options, (message.response as any).update)
                     };
                     break;
+                case /* QromaLightsResponse qromaDeviceResponse */ 10:
+                    message.response = {
+                        oneofKind: "qromaDeviceResponse",
+                        qromaDeviceResponse: QromaLightsResponse.internalBinaryRead(reader, reader.uint32(), options, (message.response as any).qromaDeviceResponse)
+                    };
+                    break;
+                case /* QromaStripResponse qromaStripResponse */ 11:
+                    message.response = {
+                        oneofKind: "qromaStripResponse",
+                        qromaStripResponse: QromaStripResponse.internalBinaryRead(reader, reader.uint32(), options, (message.response as any).qromaStripResponse)
+                    };
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -1375,6 +1437,12 @@ class MyAppResponse$Type extends MessageType<MyAppResponse> {
         /* UpdateResponse update = 6; */
         if (message.response.oneofKind === "update")
             UpdateResponse.internalBinaryWrite(message.response.update, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        /* QromaLightsResponse qromaDeviceResponse = 10; */
+        if (message.response.oneofKind === "qromaDeviceResponse")
+            QromaLightsResponse.internalBinaryWrite(message.response.qromaDeviceResponse, writer.tag(10, WireType.LengthDelimited).fork(), options).join();
+        /* QromaStripResponse qromaStripResponse = 11; */
+        if (message.response.oneofKind === "qromaStripResponse")
+            QromaStripResponse.internalBinaryWrite(message.response.qromaStripResponse, writer.tag(11, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

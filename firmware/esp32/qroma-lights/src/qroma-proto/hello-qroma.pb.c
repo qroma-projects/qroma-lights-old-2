@@ -57,7 +57,7 @@ PB_BIND(PingResponse, PingResponse, AUTO)
 PB_BIND(MyAppCommand, MyAppCommand, AUTO)
 
 
-PB_BIND(MyAppResponse, MyAppResponse, AUTO)
+PB_BIND(MyAppResponse, MyAppResponse, 2)
 
 
 

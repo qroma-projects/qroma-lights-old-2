@@ -1,0 +1,5 @@
+# QromaPointManagementCommand.instanceId  max_size: 9  fixed_length:true
+
+QpmCommand_SetQromaStripName.name  max_size:30  fixed_length:true
+
+SetQromaStripDeviceName.name  max_size:30  fixed_length:true
