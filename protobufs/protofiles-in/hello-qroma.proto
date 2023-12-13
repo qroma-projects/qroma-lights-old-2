@@ -1,5 +1,8 @@
 syntax = "proto3";
 
+import "qroma-strip-command.proto";
+import "qroma-lights-command.proto";
+
 
 message HelloQromaRequest {
   string name = 1;
@@ -45,7 +48,6 @@ message MathResponse {
     MathResult_AddAndSubtract addAndSubtractResult = 3;
   }
 }
-
 
 enum UpdateType {
   UpdateType_NotSet = 0;
@@ -104,6 +106,9 @@ message MyAppCommand {
     SetUpdateConfiguration setUpdateConfiguration = 3;
     SetUpdateProgressIndicator setUpdateProgressIndicator = 4;
     PingRequest pingRequest = 5;
+
+    QromaLightsCommand qromaDeviceCommand = 10;
+    QromaStripCommand qromaStripCommand = 11;
   }
 }
 
@@ -115,5 +120,8 @@ message MyAppResponse {
     SetUpdateProgressIndicatorResponse setUpdateProgressIndicatorResponse = 4;
     PingResponse pingResponse = 5;
     UpdateResponse update = 6;
+
+    QromaLightsResponse qromaDeviceResponse = 10;
+    QromaStripResponse qromaStripResponse = 11;
   }
 }
